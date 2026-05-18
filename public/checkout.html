@@ -1,0 +1,930 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Checkout - Cala-Cesta</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=Nunito:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --light-brown: #D2B48C;
+      --orange: #F4A261;
+      --dark-brown: #8B4513;
+      --cream: #FFF8E7;
+      --white: #FFFFFF;
+      --shadow: 0 4px 15px rgba(139, 69, 19, 0.15);
+      --shadow-lg: 0 20px 50px rgba(139, 69, 19, 0.2);
+      --success: #28a745;
+      --error: #dc3545;
+    }
+
+    body {
+      font-family: 'Nunito', sans-serif;
+      background: linear-gradient(135deg, var(--cream) 0%, #f0dfc0 100%);
+      min-height: 100vh;
+      color: var(--dark-brown);
+    }
+
+    /* ── HEADER ── */
+    header {
+      background: var(--white);
+      box-shadow: var(--shadow);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .nav-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 1rem 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .logo {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: var(--orange);
+      text-decoration: none;
+      letter-spacing: -0.5px;
+    }
+    .logo i { margin-right: 0.4rem; }
+
+    /* ── PROGRESS STEPS ── */
+    .progress-bar {
+      background: var(--white);
+      border-bottom: 1px solid #f0e0c8;
+      padding: 1rem 20px;
+    }
+    .steps {
+      max-width: 600px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0;
+    }
+    .step {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.3rem;
+      position: relative;
+      flex: 1;
+    }
+    .step::after {
+      content: '';
+      position: absolute;
+      top: 18px;
+      left: 60%;
+      width: 80%;
+      height: 2px;
+      background: #e8d5b8;
+      z-index: 0;
+    }
+    .step:last-child::after { display: none; }
+    .step-circle {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 0.9rem;
+      border: 2px solid #e8d5b8;
+      background: var(--white);
+      color: #bbb;
+      position: relative;
+      z-index: 1;
+      transition: all 0.3s;
+    }
+    .step.active .step-circle {
+      background: var(--orange);
+      border-color: var(--orange);
+      color: white;
+      box-shadow: 0 4px 14px rgba(244, 162, 97, 0.45);
+    }
+    .step.done .step-circle {
+      background: var(--success);
+      border-color: var(--success);
+      color: white;
+    }
+    .step-label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: #bbb;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .step.active .step-label { color: var(--orange); }
+    .step.done .step-label { color: var(--success); }
+
+    /* ── MAIN LAYOUT ── */
+    .checkout-wrapper {
+      max-width: 1100px;
+      margin: 2.5rem auto;
+      padding: 0 20px 4rem;
+      display: grid;
+      grid-template-columns: 1.4fr 1fr;
+      gap: 2.5rem;
+      align-items: start;
+    }
+
+    /* ── PANELS ── */
+    .panel {
+      background: var(--white);
+      border-radius: 24px;
+      padding: 2.2rem;
+      box-shadow: var(--shadow);
+      position: relative;
+      overflow: hidden;
+    }
+    .panel::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, var(--orange), var(--light-brown));
+    }
+    .panel-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: var(--dark-brown);
+      margin-bottom: 1.8rem;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+    .panel-title i { color: var(--orange); font-size: 1.1rem; }
+
+    /* ── FORM FIELDS ── */
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+    .form-group {
+      margin-bottom: 1.2rem;
+    }
+    .form-group label {
+      display: block;
+      font-size: 0.82rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      color: var(--dark-brown);
+      margin-bottom: 0.45rem;
+      opacity: 0.8;
+    }
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+      width: 100%;
+      padding: 0.85rem 1.1rem;
+      border: 2px solid #e8d5b8;
+      border-radius: 14px;
+      font-size: 0.95rem;
+      font-family: 'Nunito', sans-serif;
+      color: var(--dark-brown);
+      background: #fffdf8;
+      transition: border-color 0.25s, box-shadow 0.25s;
+      outline: none;
+    }
+    .form-group input:focus,
+    .form-group select:focus,
+    .form-group textarea:focus {
+      border-color: var(--orange);
+      box-shadow: 0 0 0 4px rgba(244,162,97,0.14);
+    }
+    .form-group textarea { resize: vertical; min-height: 80px; }
+
+    /* Payment Method Toggle */
+    .payment-methods {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.8rem;
+      margin-bottom: 1.5rem;
+    }
+    .pay-option {
+      cursor: pointer;
+    }
+    .pay-option input { display: none; }
+    .pay-label {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 1rem 0.6rem;
+      border: 2px solid #e8d5b8;
+      border-radius: 16px;
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: #999;
+      cursor: pointer;
+      transition: all 0.25s;
+    }
+    .pay-label i { font-size: 1.5rem; }
+    .pay-option input:checked + .pay-label {
+      border-color: var(--orange);
+      background: #fff7ee;
+      color: var(--dark-brown);
+      box-shadow: 0 4px 16px rgba(244,162,97,0.2);
+    }
+    .pay-label:hover { border-color: var(--light-brown); color: var(--dark-brown); }
+
+    /* Card fields */
+    .card-fields { display: none; }
+    .card-fields.visible { display: block; }
+
+    /* ── ORDER SUMMARY ── */
+    .order-item {
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+      padding: 1rem 0;
+      border-bottom: 1px solid #f5ece0;
+    }
+    .order-item:last-of-type { border-bottom: none; }
+    .item-img {
+      width: 60px;
+      height: 60px;
+      border-radius: 12px;
+      background-size: cover;
+      background-position: center;
+      flex-shrink: 0;
+      border: 2px solid #f0dfc0;
+    }
+    .item-info { flex: 1; }
+    .item-info h4 {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--dark-brown);
+      margin-bottom: 0.2rem;
+    }
+    .item-info .shop-tag {
+      font-size: 0.78rem;
+      color: #999;
+    }
+    .item-qty-price {
+      text-align: right;
+    }
+    .item-qty-price .qty {
+      font-size: 0.78rem;
+      color: #bbb;
+      margin-bottom: 0.2rem;
+    }
+    .item-qty-price .price {
+      font-weight: 700;
+      color: var(--orange);
+      font-size: 1rem;
+    }
+
+    /* Totals */
+    .divider { border: none; border-top: 2px dashed #f0dfc0; margin: 1rem 0; }
+    .total-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin: 0.5rem 0;
+      font-size: 0.92rem;
+      color: #888;
+    }
+    .total-row span:last-child { font-weight: 600; color: var(--dark-brown); }
+    .total-row.grand {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: var(--dark-brown);
+      margin-top: 0.8rem;
+    }
+    .total-row.grand span:last-child { color: var(--orange); font-size: 1.4rem; }
+
+    /* CTA */
+    .btn-checkout {
+      width: 100%;
+      padding: 1.1rem;
+      background: linear-gradient(135deg, var(--orange), #e8834a);
+      color: white;
+      border: none;
+      border-radius: 16px;
+      font-family: 'Nunito', sans-serif;
+      font-size: 1.05rem;
+      font-weight: 700;
+      cursor: pointer;
+      margin-top: 1.5rem;
+      transition: all 0.3s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.6rem;
+      letter-spacing: 0.3px;
+      box-shadow: 0 6px 20px rgba(244,162,97,0.4);
+    }
+    .btn-checkout:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 28px rgba(244,162,97,0.55);
+    }
+    .btn-checkout:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+    .btn-back {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: var(--dark-brown);
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 0.9rem;
+      margin-top: 1rem;
+      opacity: 0.7;
+      transition: opacity 0.2s;
+    }
+    .btn-back:hover { opacity: 1; }
+
+    /* Trust badges */
+    .trust-badges {
+      display: flex;
+      justify-content: center;
+      gap: 1.5rem;
+      margin-top: 1.2rem;
+      flex-wrap: wrap;
+    }
+    .badge {
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      font-size: 0.78rem;
+      color: #999;
+      font-weight: 600;
+    }
+    .badge i { color: var(--success); font-size: 0.9rem; }
+
+    /* ── SUCCESS OVERLAY ── */
+    .success-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(255,248,231,0.97);
+      z-index: 9999;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      text-align: center;
+      padding: 2rem;
+      animation: fadeIn 0.4s ease;
+    }
+    .success-overlay.show { display: flex; }
+
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes popIn {
+      0% { transform: scale(0.5); opacity: 0; }
+      70% { transform: scale(1.1); }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-12px); }
+    }
+
+    .success-icon {
+      width: 110px;
+      height: 110px;
+      background: linear-gradient(135deg, var(--orange), #e8834a);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 3rem;
+      color: white;
+      margin-bottom: 2rem;
+      box-shadow: 0 12px 40px rgba(244,162,97,0.5);
+      animation: popIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) 0.1s both, float 3s ease-in-out 0.8s infinite;
+    }
+    .success-overlay h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: 2.2rem;
+      color: var(--dark-brown);
+      margin-bottom: 0.8rem;
+    }
+    .success-overlay p {
+      color: #888;
+      font-size: 1.05rem;
+      margin-bottom: 0.4rem;
+      max-width: 420px;
+    }
+    .order-number {
+      background: var(--cream);
+      border: 2px dashed var(--light-brown);
+      border-radius: 16px;
+      padding: 1rem 2rem;
+      margin: 1.5rem 0 2rem;
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--dark-brown);
+      letter-spacing: 2px;
+    }
+    .success-actions { display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center; }
+
+    .btn-prim {
+      padding: 0.85rem 2rem;
+      background: linear-gradient(135deg, var(--orange), #e8834a);
+      color: white;
+      border: none;
+      border-radius: 50px;
+      font-family: 'Nunito', sans-serif;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: all 0.3s;
+      box-shadow: 0 6px 20px rgba(244,162,97,0.4);
+    }
+    .btn-prim:hover { transform: translateY(-2px); }
+    .btn-sec {
+      padding: 0.85rem 2rem;
+      background: transparent;
+      color: var(--dark-brown);
+      border: 2px solid var(--light-brown);
+      border-radius: 50px;
+      font-family: 'Nunito', sans-serif;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: all 0.3s;
+    }
+    .btn-sec:hover { background: var(--light-brown); }
+
+    /* Alert */
+    .alert {
+      padding: 0.9rem 1.2rem;
+      border-radius: 12px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      margin-bottom: 1.2rem;
+      display: none;
+      align-items: center;
+      gap: 0.6rem;
+    }
+    .alert.error { background: #fff0f0; color: var(--error); border: 1.5px solid #ffcccc; display: flex; }
+    .alert.info { background: #fff7ee; color: var(--dark-brown); border: 1.5px solid var(--light-brown); display: flex; }
+
+    /* Spinner */
+    .spinner {
+      width: 18px; height: 18px;
+      border: 3px solid rgba(255,255,255,0.4);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      display: none;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .checkout-wrapper {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+        margin: 1.5rem auto;
+      }
+      .form-row { grid-template-columns: 1fr; }
+      .payment-methods { grid-template-columns: 1fr 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <nav class="nav-container">
+    <a href="index.html" class="logo"><i class="fas fa-gift"></i> Cala-Cesta</a>
+    <a href="cart.html" class="btn-back"><i class="fas fa-arrow-left"></i> Back to Cart</a>
+  </nav>
+</header>
+
+<!-- PROGRESS -->
+<div class="progress-bar">
+  <div class="steps">
+    <div class="step done">
+      <div class="step-circle"><i class="fas fa-check"></i></div>
+      <span class="step-label">Cart</span>
+    </div>
+    <div class="step active">
+      <div class="step-circle">2</div>
+      <span class="step-label">Checkout</span>
+    </div>
+    <div class="step">
+      <div class="step-circle">3</div>
+      <span class="step-label">Confirmed</span>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="checkout-wrapper">
+
+  <!-- LEFT: FORM -->
+  <div>
+    <!-- Shipping -->
+    <div class="panel" style="margin-bottom: 2rem;">
+      <h2 class="panel-title"><i class="fas fa-map-marker-alt"></i> Shipping Details</h2>
+
+      <div id="formAlert" class="alert"></div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>First Name</label>
+          <input type="text" id="firstName" placeholder="Maria" required>
+        </div>
+        <div class="form-group">
+          <label>Last Name</label>
+          <input type="text" id="lastName" placeholder="Santos" required>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Email Address</label>
+        <input type="email" id="email" placeholder="maria@email.com" required>
+      </div>
+      <div class="form-group">
+        <label>Phone Number</label>
+        <input type="tel" id="phone" placeholder="+63 917 000 0000">
+      </div>
+      <div class="form-group">
+        <label>Street Address</label>
+        <input type="text" id="address" placeholder="123 Magsaysay St., Brgy. Example" required>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>City / Municipality</label>
+          <input type="text" id="city" placeholder="Quezon City" required>
+        </div>
+        <div class="form-group">
+          <label>Province</label>
+          <input type="text" id="province" placeholder="Metro Manila">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>ZIP Code</label>
+          <input type="text" id="zip" placeholder="1100">
+        </div>
+        <div class="form-group">
+          <label>Country</label>
+          <input type="text" id="country" value="Philippines">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Order Notes <span style="font-weight:400;opacity:0.6">(optional)</span></label>
+        <textarea id="notes" placeholder="Any special instructions for your order..."></textarea>
+      </div>
+    </div>
+
+    <!-- Payment -->
+    <div class="panel">
+      <h2 class="panel-title"><i class="fas fa-credit-card"></i> Payment Method</h2>
+
+      <div class="payment-methods">
+        <label class="pay-option">
+          <input type="radio" name="payment" value="cod" checked>
+          <span class="pay-label">
+            <i class="fas fa-money-bill-wave"></i>
+            Cash on Delivery
+          </span>
+        </label>
+        <label class="pay-option">
+          <input type="radio" name="payment" value="gcash">
+          <span class="pay-label">
+            <i class="fas fa-mobile-alt"></i>
+            GCash
+          </span>
+        </label>
+        <label class="pay-option">
+          <input type="radio" name="payment" value="card">
+          <span class="pay-label">
+            <i class="fas fa-credit-card"></i>
+            Credit / Debit
+          </span>
+        </label>
+      </div>
+
+      <!-- COD info -->
+      <div id="codInfo" class="alert info" style="display:flex">
+        <i class="fas fa-info-circle"></i>
+        Pay in cash when your order arrives at your doorstep.
+      </div>
+
+      <!-- GCash info -->
+      <div id="gcashInfo" class="alert info">
+        <i class="fas fa-mobile-alt"></i>
+        You'll receive GCash payment instructions via email after placing your order.
+      </div>
+
+      <!-- Card fields -->
+      <div id="cardFields" class="card-fields">
+        <div class="form-group">
+          <label>Card Number</label>
+          <input type="text" id="cardNumber" placeholder="1234 5678 9012 3456" maxlength="19">
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Expiry Date</label>
+            <input type="text" id="cardExpiry" placeholder="MM / YY" maxlength="7">
+          </div>
+          <div class="form-group">
+            <label>CVV</label>
+            <input type="text" id="cardCvv" placeholder="123" maxlength="4">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Cardholder Name</label>
+          <input type="text" id="cardName" placeholder="MARIA SANTOS">
+        </div>
+      </div>
+
+      <button class="btn-checkout" id="placeOrderBtn" onclick="placeOrder()">
+        <span class="spinner" id="spinner"></span>
+        <i class="fas fa-lock" id="lockIcon"></i>
+        <span id="btnText">Place Order Securely</span>
+      </button>
+
+      <div class="trust-badges">
+        <span class="badge"><i class="fas fa-shield-alt"></i> Secure Checkout</span>
+        <span class="badge"><i class="fas fa-truck"></i> Fast Delivery</span>
+        <span class="badge"><i class="fas fa-undo"></i> Easy Returns</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT: ORDER SUMMARY -->
+  <div class="panel" style="position: sticky; top: 100px;">
+    <h2 class="panel-title"><i class="fas fa-receipt"></i> Order Summary</h2>
+
+    <div id="orderItemsList">
+      <div style="text-align:center; padding: 2rem; color:#bbb;">
+        <i class="fas fa-spinner fa-spin" style="font-size:2rem; margin-bottom:1rem;"></i>
+        <p>Loading your items...</p>
+      </div>
+    </div>
+
+    <hr class="divider">
+
+    <div class="total-row">
+      <span>Subtotal</span>
+      <span id="summarySubtotal">—</span>
+    </div>
+    <div class="total-row">
+      <span>Shipping</span>
+      <span style="color: #28a745; font-weight:700;">FREE</span>
+    </div>
+    <div class="total-row">
+      <span>Tax (12% VAT)</span>
+      <span id="summaryTax">—</span>
+    </div>
+    <hr class="divider">
+    <div class="total-row grand">
+      <span>Total</span>
+      <span id="summaryTotal">—</span>
+    </div>
+  </div>
+</div>
+
+<!-- SUCCESS OVERLAY -->
+<div class="success-overlay" id="successOverlay">
+  <div class="success-icon"><i class="fas fa-check"></i></div>
+  <h1>Order Placed! 🎉</h1>
+  <p>Thank you for shopping at <strong>Cala-Cesta</strong>.</p>
+  <p>Your order is being prepared and will be delivered soon.</p>
+  <div class="order-number" id="orderNumberDisplay">Order #000000</div>
+  <div class="success-actions">
+    <a href="index.html" class="btn-prim"><i class="fas fa-shopping-bag"></i> Continue Shopping</a>
+    <a href="profile.html" class="btn-sec"><i class="fas fa-box"></i> View My Orders</a>
+  </div>
+</div>
+
+<script>
+  let cartData = null;
+
+  window.addEventListener('load', async () => {
+    const token = localStorage.getItem('token');
+    if (!token) { window.location.href = 'login.html'; return; }
+
+    await loadCartSummary();
+    prefillUserInfo();
+    setupPaymentToggle();
+    setupCardFormatting();
+  });
+
+  async function loadCartSummary() {
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch('/api/cart', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (!res.ok) throw new Error();
+      cartData = await res.json();
+      renderSummary(cartData);
+    } catch {
+      document.getElementById('orderItemsList').innerHTML =
+        `<p style="text-align:center;color:#dc3545;padding:1rem;">Failed to load cart.</p>`;
+    }
+  }
+
+  function renderSummary(cart) {
+    if (!cart.items || cart.items.length === 0) {
+      window.location.href = 'cart.html';
+      return;
+    }
+    const list = document.getElementById('orderItemsList');
+    list.innerHTML = cart.items.map(item => `
+      <div class="order-item">
+        <div class="item-img" style="background-image:url('${item.product.image || ''}')"></div>
+        <div class="item-info">
+          <h4>${item.product.name}</h4>
+          <span class="shop-tag"><i class="fas fa-store" style="margin-right:4px"></i>${item.product.shopId || 'Featured'}</span>
+        </div>
+        <div class="item-qty-price">
+          <div class="qty">x${item.quantity}</div>
+          <div class="price">₱${(item.product.price * item.quantity).toFixed(2)}</div>
+        </div>
+      </div>
+    `).join('');
+
+    const subtotal = cart.total;
+    const tax = subtotal * 0.12;
+    const total = subtotal + tax;
+
+    document.getElementById('summarySubtotal').textContent = `₱${subtotal.toFixed(2)}`;
+    document.getElementById('summaryTax').textContent = `₱${tax.toFixed(2)}`;
+    document.getElementById('summaryTotal').textContent = `₱${total.toFixed(2)}`;
+  }
+
+  async function prefillUserInfo() {
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch('/api/auth/profile', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (!res.ok) return;
+      const user = await res.json();
+
+      // Split name
+      const parts = (user.name || '').split(' ');
+      document.getElementById('firstName').value = parts[0] || '';
+      document.getElementById('lastName').value = parts.slice(1).join(' ') || '';
+      document.getElementById('email').value = user.email || '';
+      document.getElementById('phone').value = user.phone || '';
+      document.getElementById('address').value = user.address || '';
+    } catch {}
+  }
+
+  function setupPaymentToggle() {
+    const radios = document.querySelectorAll('input[name="payment"]');
+    const codInfo = document.getElementById('codInfo');
+    const gcashInfo = document.getElementById('gcashInfo');
+    const cardFields = document.getElementById('cardFields');
+
+    radios.forEach(r => r.addEventListener('change', () => {
+      codInfo.style.display = 'none';
+      gcashInfo.style.display = 'none';
+      cardFields.classList.remove('visible');
+
+      if (r.value === 'cod') codInfo.style.display = 'flex';
+      else if (r.value === 'gcash') gcashInfo.style.display = 'flex';
+      else if (r.value === 'card') cardFields.classList.add('visible');
+    }));
+  }
+
+  function setupCardFormatting() {
+    const num = document.getElementById('cardNumber');
+    if (num) {
+      num.addEventListener('input', () => {
+        num.value = num.value.replace(/\D/g,'').replace(/(.{4})/g,'$1 ').trim().slice(0,19);
+      });
+    }
+    const exp = document.getElementById('cardExpiry');
+    if (exp) {
+      exp.addEventListener('input', () => {
+        let v = exp.value.replace(/\D/g,'');
+        if (v.length >= 2) v = v.slice(0,2) + ' / ' + v.slice(2,4);
+        exp.value = v;
+      });
+    }
+  }
+
+  function showAlert(msg, type = 'error') {
+    const el = document.getElementById('formAlert');
+    el.className = `alert ${type}`;
+    el.innerHTML = `<i class="fas fa-${type==='error'?'exclamation-circle':'info-circle'}"></i> ${msg}`;
+    el.style.display = 'flex';
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+
+  function hideAlert() {
+    document.getElementById('formAlert').style.display = 'none';
+  }
+
+  async function placeOrder() {
+    hideAlert();
+
+    // Validate
+    const firstName = document.getElementById('firstName').value.trim();
+    const lastName  = document.getElementById('lastName').value.trim();
+    const email     = document.getElementById('email').value.trim();
+    const address   = document.getElementById('address').value.trim();
+    const city      = document.getElementById('city').value.trim();
+
+    if (!firstName || !lastName) return showAlert('Please enter your full name.');
+    if (!email || !email.includes('@')) return showAlert('Please enter a valid email address.');
+    if (!address) return showAlert('Please enter your shipping address.');
+    if (!city) return showAlert('Please enter your city.');
+
+    const paymentMethod = document.querySelector('input[name="payment"]:checked').value;
+
+    if (paymentMethod === 'card') {
+      const cn = document.getElementById('cardNumber').value.replace(/\s/g,'');
+      const ce = document.getElementById('cardExpiry').value;
+      const cv = document.getElementById('cardCvv').value;
+      if (cn.length < 16) return showAlert('Please enter a valid card number.');
+      if (!ce.includes('/'))  return showAlert('Please enter a valid expiry date.');
+      if (cv.length < 3)  return showAlert('Please enter a valid CVV.');
+    }
+
+    // Loading state
+    const btn = document.getElementById('placeOrderBtn');
+    const spinner = document.getElementById('spinner');
+    const lockIcon = document.getElementById('lockIcon');
+    const btnText = document.getElementById('btnText');
+    btn.disabled = true;
+    spinner.style.display = 'block';
+    lockIcon.style.display = 'none';
+    btnText.textContent = 'Processing Order...';
+
+    try {
+      const token = localStorage.getItem('token');
+      const shippingAddress = `${firstName} ${lastName}, ${address}, ${city}, ${document.getElementById('province').value}, ${document.getElementById('zip').value}, ${document.getElementById('country').value}`;
+
+      const subtotal = cartData.total;
+      const tax = subtotal * 0.12;
+      const grandTotal = subtotal + tax;
+
+      // Group items by shop/business
+      const shopGroups = {};
+      for (const item of cartData.items) {
+        const bid = item.product.shopId || 'unknown';
+        if (!shopGroups[bid]) shopGroups[bid] = [];
+        shopGroups[bid].push(item);
+      }
+
+      // Place one order per business (or single order for all)
+      const res = await fetch('/api/checkout', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          shippingAddress,
+          phone: document.getElementById('phone').value,
+          email,
+          paymentMethod,
+          notes: document.getElementById('notes').value,
+          items: cartData.items,
+          subtotal,
+          tax: tax.toFixed(2),
+          total: grandTotal.toFixed(2)
+        })
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) throw new Error(data.message || 'Order failed');
+
+      // Show success
+      document.getElementById('orderNumberDisplay').textContent =
+        `Order #${data.orderNumber || data.orderId?.slice(-6).toUpperCase() || Math.random().toString(36).substr(2,6).toUpperCase()}`;
+
+      document.getElementById('successOverlay').classList.add('show');
+
+    } catch (err) {
+      showAlert(err.message || 'Failed to place order. Please try again.');
+      btn.disabled = false;
+      spinner.style.display = 'none';
+      lockIcon.style.display = 'inline';
+      btnText.textContent = 'Place Order Securely';
+    }
+  }
+</script>
+</body>
+</html>

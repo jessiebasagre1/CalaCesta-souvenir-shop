@@ -1,0 +1,73 @@
+    header {
+      background: var(--white);
+      box-shadow: 0 2px 12px rgba(92,61,46,0.08);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .nav-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 2rem;
+      height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .logo {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--dark-brown);
+      text-decoration: none;
+    }
+    .logo i { color: var(--orange); }
+    .nav-links { display: flex; gap: 0.25rem; }
+    .nav-links a {
+      padding: 0.5rem 1rem;
+      border-radius: 10px;
+      text-decoration: none;
+      color: var(--dark-brown);
+      font-size: 0.9rem;
+      font-weight: 500;
+      transition: background 0.2s, color 0.2s;
+    }
+    .nav-links a:hover, .nav-links a.active {
+      background: var(--cream);
+      color: var(--orange);
+    }
+    .nav-right { display: flex; align-items: center; gap: 1rem; }
+    .cart-link {
+      position: relative;
+      color: var(--dark-brown);
+      font-size: 1.2rem;
+      text-decoration: none;
+      padding: 0.4rem;
+    }
+    .cart-badge {
+      position: absolute;
+      top: -4px;
+      right: -6px;
+      background: var(--orange);
+      color: white;
+      border-radius: 50%;
+      width: 18px;
+      height: 18px;
+      font-size: 0.65rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .btn-logout {
+      background: transparent;
+      border: 1.5px solid var(--light-brown);
+      color: var(--dark-brown);
+      padding: 0.45rem 1.1rem;
+      border-radius: 10px;
+      font-size: 0.85rem;
+      font-family: 'DM Sans', sans-serif;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-logout:hover { background: var(--dark-brown); color: white; border-color: var(--dark-brown); }

@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title id="pageTitle">Product - Cala-Cesta</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+  <header>
+    <nav class="nav-container container">
+      <a href="index.html" class="logo">
+        <i class="fas fa-gift"></i> Cala-Cesta
+      </a>
+      <ul class="nav-links">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="index.html#featured-shops">Shops</a></li>
+      </ul>
+      <div class="auth-section" id="authSection"></div>
+    </nav>
+  </header>
+
+  <main class="container" style="padding: 2rem 0;">
+    <!-- Loading State -->
+    <div id="loadingState" style="text-align: center; padding: 6rem 2rem;">
+      <i class="fas fa-spinner fa-spin" style="font-size: 3rem; color: var(--orange); margin-bottom: 1rem;"></i>
+      <h2>Loading Product...</h2>
+    </div>
+
+    <!-- Product Not Found -->
+    <div id="notFound" style="display: none; text-align: center; padding: 6rem 2rem;">
+      <i class="fas fa-exclamation-triangle" style="font-size: 4rem; color: var(--orange); margin-bottom: 1rem;"></i>
+      <h2>Product Not Found</h2>
+      <p>The product you're looking for doesn't exist or has been removed.</p>
+      <a href="index.html" class="btn btn-primary">Back to Shop</a>
+    </div>
+
+    <!-- Main Product Section -->
+    <section id="productSection" style="display: none;">
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; align-items: start;">
+        <!-- Product Image & Buy -->
+        <div>
+          <div id="mainImage" class="product-main-image"></div>
+          <div id="imageGallery" style="display: flex; gap: 0.5rem; margin-top: 1rem;"></div>
+        </div>
+
+        <!-- Product Info -->
+        <div>
+          <div id="productInfo">
+            <!-- Dynamic content -->
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Ratings & Reviews -->
+    <section id="reviewsSection" style="margin-top: 4rem;">
+      <h2 style="margin-bottom: 2rem;">
+        <i class="fas fa-star"></i> Reviews & Ratings
+        <span id="avgRating" style="color: var(--orange); font-weight: bold; margin-left: 1rem;"></span>
+      </h2>
+      <div id="reviewsList">
+        <!-- Reviews loaded here -->
+      </div>
+      <div id="addReviewForm" style="display: none; background: #f8f9fa; padding: 2rem; border-radius: 15px; margin-top: 2rem;">
+        <h3>Add Your Review</h3>
+        <form id="reviewForm">
+          <div style="display: flex; gap: 1rem; margin-bottom: 1rem;">
+            <div style="flex: 1;">
+              <label>Rating</label>
+              <select id="reviewRating" style="width: 100%; padding: 0.75rem; border: 2px solid var(--light-brown); border-radius: 8px;">
+                <option value="5">⭐⭐⭐⭐⭐ 5 Stars</option>
+                <option value="4">⭐⭐⭐⭐ 4 Stars</option>
+                <option value="3">⭐⭐⭐ 3 Stars</option>
+                <option value="2">⭐⭐ 2 Stars</option>
+                <option value="1">⭐ 1 Star</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Review (optional)</label>
+            <textarea id="reviewText" rows="4" placeholder="Share your experience..."></textarea>
+          </div>
+          <button type="submit" class="btn btn-primary">Submit Review</button>
+        </form>
+      </div>
+    </section>
+
+    <!-- Related Products -->
+    <section id="relatedProducts" style="margin-top: 4rem;">
+      <h2 style="margin-bottom: 2rem;">
+        <i class="fas fa-th-large"></i> Related Products
+      </h2>
+      <div class="grid" id="relatedProductsList">
+        <!-- Related products -->
+      </div>
+    </section>
+  </main>
+
+  <script src="js/auth.js"></script>
+  <script src="js/product.js"></script>
+</body>
+</html>

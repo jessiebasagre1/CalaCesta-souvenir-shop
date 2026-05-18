@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cala-Cesta - Souvenir Shop</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/nav.css">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+  <!-- ─── NAVBAR ─────────────────────────────────────────── -->
+<header>
+  <div class="nav-container">
+    <a href="index.html" class="logo"><i class="fas fa-gift"></i> Cala-Cesta</a>
+
+    <nav class="nav-links">
+      <a href="index.html"><i class="fas fa-home"></i> Home</a>
+      <a href="index.html#featured-shops"><i class="fas fa-store"></i> Shops</a>
+      <a href="index.html#featured-products"><i class="fas fa-tag"></i> Products</a>
+    </nav>
+
+    <div class="nav-right">
+      <div class="auth-section" id="authSection">
+        <!-- Dynamic auth buttons/menu -->
+      </div>
+  </div>
+</header>
+<!------------------------------------------------------------------------>
+  <section class="hero">
+    <div class="hero-content container">
+      <h1>Preserve Your Memories</h1>
+      <p>Discover unique souvenirs from around the world. Create lasting memories with our curated collection.</p>
+      <a href="#featured-products" class="btn btn-primary" style="font-size: 1.1rem; padding: 1rem 2rem;">Shop Now</a>
+    </div>
+  </section>
+
+  <section id="featured-shops" class="featured-section">
+    <div class="container">
+      <h2 class="section-title">Featured Shops</h2>
+      <div class="grid" id="featuredShops">
+        <!-- Shops loaded via JS -->
+      </div>
+    </div>
+  </section>
+
+  <section id="featured-products" class="featured-section">
+    <div class="container">
+      <h2 class="section-title">Featured Products</h2>
+      <div class="grid" id="featuredProducts">
+        <!-- Products loaded via JS -->
+      </div>
+      <div style="text-align: center;">
+        <a href="#" class="btn btn-primary" id="shopNowBtn" style="font-size: 1.1rem;">Start Shopping</a>
+      </div>
+    </div>
+  </section>
+
+  <script src="js/auth.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>
