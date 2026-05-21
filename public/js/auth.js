@@ -45,10 +45,6 @@ class SmartAuth {
     
     authSection.innerHTML = `
       <div class="user-menu" style="display: flex; align-items: center; gap: 1rem;">
-        <a href="cart.html" class="cart-link" title="Cart">
-          <i class="fas fa-shopping-cart"></i>
-          <span class="cart-count" style="display: none;">0</span>
-        </a>
         <div style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;" onclick="smartAuth.toggleMenu()">
           <span style="font-weight: 500;">Hi, ${user.name}</span>
           <i class="fas fa-chevron-down" id="menuIcon"></i>
@@ -59,7 +55,6 @@ class SmartAuth {
             ${profileText}
           </a>
           <a href="cart.html"><i class="fas fa-shopping-cart"></i> Cart</a>
-          ${user.userType === 'customer' ? '<a href="orders.html"><i class="fas fa-list"></i> Orders</a>' : ''}
           <a href="#" onclick="smartAuth.logout()"><i class="fas fa-sign-out-alt"></i> Logout</a>
         </div>
       </div>
@@ -152,4 +147,4 @@ window.smartAuth.toggleMenu = () => {};
 window.smartAuth.logout = () => {};
 window.smartAuth.goToProfile = () => {};
 // At bottom of auth.js
-window.loadAuthState = loadAuthState;
+window.loadAuthState = () => window.smartAuth?.loadAuthState();

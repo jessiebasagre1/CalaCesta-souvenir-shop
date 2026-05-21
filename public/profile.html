@@ -4,601 +4,40 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>My Profile - Cala-Cesta</title>
-  <link rel="stylesheet" href="css/style.css">
+  
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
-
-  <style>
-    :root {
-      --orange: #f4a261;
-      --light-brown: #d2b48c;
-      --dark-brown: #5c3d2e;
-      --cream: #fdf6ec;
-      --white: #ffffff;
-      --shadow: 0 4px 24px rgba(92,61,46,0.10);
-      --radius: 20px;
-      --accent: #e76f51;
-    }
-
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-
-    body {
-      font-family: 'DM Sans', sans-serif;
-      background: var(--cream);
-      color: var(--dark-brown);
-      min-height: 100vh;
-    }
-
-    /* ─── NAV ─────────────────────────────────── */
-
-
-    /* ─── LAYOUT ──────────────────────────────── */
-    .page-wrap {
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 2.5rem 2rem 4rem;
-    }
-
-    /* ─── PROFILE HERO ────────────────────────── */
-    .profile-hero {
-      background: linear-gradient(135deg, var(--dark-brown) 0%, #8b5e3c 100%);
-      border-radius: var(--radius);
-      padding: 2.5rem;
-      display: flex;
-      align-items: center;
-      gap: 2rem;
-      margin-bottom: 2rem;
-      position: relative;
-      overflow: hidden;
-    }
-    .profile-hero::before {
-      content: '';
-      position: absolute;
-      top: -40px; right: -40px;
-      width: 200px; height: 200px;
-      background: rgba(244,162,97,0.15);
-      border-radius: 50%;
-    }
-    .profile-hero::after {
-      content: '';
-      position: absolute;
-      bottom: -60px; left: 30%;
-      width: 160px; height: 160px;
-      background: rgba(255,255,255,0.05);
-      border-radius: 50%;
-    }
-    .avatar-wrap {
-      position: relative;
-      flex-shrink: 0;
-    }
-    .avatar {
-      width: 100px;
-      height: 100px;
-      border-radius: 50%;
-      background: linear-gradient(135deg, var(--orange), var(--accent));
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 2.8rem;
-      color: white;
-      border: 4px solid rgba(255,255,255,0.2);
-    }
-    .avatar-status {
-      position: absolute;
-      bottom: 4px;
-      right: 4px;
-      width: 18px;
-      height: 18px;
-      background: #4ade80;
-      border: 3px solid var(--dark-brown);
-      border-radius: 50%;
-    }
-    .hero-info { flex: 1; z-index: 1; }
-    .hero-info h1 {
-      font-family: 'Playfair Display', serif;
-      font-size: 2rem;
-      color: white;
-      margin-bottom: 0.3rem;
-    }
-    .hero-info .email {
-      color: rgba(255,255,255,0.65);
-      font-size: 0.9rem;
-      margin-bottom: 1rem;
-    }
-    .badge-pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.4rem;
-      background: rgba(244,162,97,0.25);
-      color: var(--orange);
-      border: 1px solid rgba(244,162,97,0.4);
-      padding: 0.3rem 0.9rem;
-      border-radius: 20px;
-      font-size: 0.8rem;
-      font-weight: 600;
-    }
-    .hero-stats {
-      display: flex;
-      gap: 2rem;
-      z-index: 1;
-      flex-shrink: 0;
-    }
-    .hstat {
-      text-align: center;
-    }
-    .hstat-num {
-      display: block;
-      font-family: 'Playfair Display', serif;
-      font-size: 2rem;
-      font-weight: 700;
-      color: var(--orange);
-      line-height: 1;
-    }
-    .hstat-label {
-      color: rgba(255,255,255,0.6);
-      font-size: 0.78rem;
-      margin-top: 0.3rem;
-    }
-
-    /* ─── TABS ────────────────────────────────── */
-    .tab-bar {
-      display: flex;
-      gap: 0.5rem;
-      background: var(--white);
-      border-radius: 14px;
-      padding: 0.4rem;
-      margin-bottom: 2rem;
-      box-shadow: var(--shadow);
-    }
-    .tab-btn {
-      flex: 1;
-      padding: 0.7rem 1rem;
-      border: none;
-      background: transparent;
-      border-radius: 10px;
-      font-family: 'DM Sans', sans-serif;
-      font-size: 0.88rem;
-      font-weight: 500;
-      color: #888;
-      cursor: pointer;
-      transition: all 0.2s;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 0.5rem;
-    }
-    .tab-btn.active {
-      background: var(--dark-brown);
-      color: white;
-    }
-    .tab-btn:hover:not(.active) {
-      background: var(--cream);
-      color: var(--dark-brown);
-    }
-
-    /* ─── PANELS ──────────────────────────────── */
-    .tab-panel { display: none; }
-    .tab-panel.active { display: block; }
-
-    /* ─── GRID ────────────────────────────────── */
-    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
-    .three-col { display: grid; grid-template-columns: repeat(3,1fr); gap: 1.5rem; margin-bottom: 1.5rem; }
-
-    /* ─── CARD ────────────────────────────────── */
-    .card {
-      background: var(--white);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
-      overflow: hidden;
-    }
-    .card-head {
-      padding: 1.25rem 1.75rem;
-      border-bottom: 1px solid #f0ece8;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-    .card-head h3 {
-      font-family: 'Playfair Display', serif;
-      font-size: 1.1rem;
-      color: var(--dark-brown);
-      display: flex;
-      align-items: center;
-      gap: 0.6rem;
-    }
-    .card-head h3 i { color: var(--orange); }
-    .card-body { padding: 1.75rem; }
-
-    /* ─── FORM ────────────────────────────────── */
-    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
-    .form-group { display: flex; flex-direction: column; gap: 0.4rem; }
-    .form-group.full { grid-column: 1 / -1; }
-    .form-group label {
-      font-size: 0.82rem;
-      font-weight: 600;
-      color: #888;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-    }
-    .form-group input,
-    .form-group textarea,
-    .form-group select {
-      border: 1.5px solid #e8e0d8;
-      border-radius: 10px;
-      padding: 0.65rem 1rem;
-      font-size: 0.95rem;
-      font-family: 'DM Sans', sans-serif;
-      color: var(--dark-brown);
-      background: var(--cream);
-      transition: border 0.2s;
-      outline: none;
-    }
-    .form-group input:focus,
-    .form-group textarea:focus { border-color: var(--orange); background: white; }
-    .form-group textarea { resize: vertical; min-height: 70px; }
-
-    /* ─── BUTTONS ─────────────────────────────── */
-    .btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.5rem;
-      padding: 0.65rem 1.4rem;
-      border-radius: 10px;
-      font-family: 'DM Sans', sans-serif;
-      font-size: 0.9rem;
-      font-weight: 600;
-      cursor: pointer;
-      border: none;
-      text-decoration: none;
-      transition: all 0.2s;
-    }
-    .btn-primary { background: var(--dark-brown); color: white; }
-    .btn-primary:hover { background: var(--accent); }
-    .btn-orange { background: var(--orange); color: white; }
-    .btn-orange:hover { background: var(--accent); }
-    .btn-outline {
-      background: transparent;
-      border: 1.5px solid var(--light-brown);
-      color: var(--dark-brown);
-    }
-    .btn-outline:hover { border-color: var(--orange); color: var(--orange); }
-    .btn-sm { padding: 0.4rem 0.9rem; font-size: 0.82rem; }
-    .btn-full { width: 100%; justify-content: center; margin-top: 1rem; }
-
-    /* ─── STAT MINI CARDS ─────────────────────── */
-    .mini-stat {
-      background: var(--white);
-      border-radius: 16px;
-      padding: 1.5rem;
-      box-shadow: var(--shadow);
-      display: flex;
-      align-items: center;
-      gap: 1.1rem;
-    }
-    .mini-stat-icon {
-      width: 52px;
-      height: 52px;
-      border-radius: 14px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 1.4rem;
-      flex-shrink: 0;
-    }
-    .mini-stat-icon.orange { background: rgba(244,162,97,0.15); color: var(--orange); }
-    .mini-stat-icon.brown { background: rgba(92,61,46,0.10); color: var(--dark-brown); }
-    .mini-stat-icon.green { background: rgba(74,222,128,0.12); color: #22c55e; }
-    .mini-stat-icon.red { background: rgba(231,111,81,0.12); color: var(--accent); }
-    .mini-stat-val {
-      font-family: 'Playfair Display', serif;
-      font-size: 1.6rem;
-      font-weight: 700;
-      color: var(--dark-brown);
-      line-height: 1;
-    }
-    .mini-stat-label { font-size: 0.8rem; color: #999; margin-top: 0.2rem; }
-
-    /* ─── ORDER LIST ──────────────────────────── */
-    .order-item {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-      padding: 1.1rem 1.75rem;
-      border-bottom: 1px solid #f5f1ec;
-      cursor: pointer;
-      transition: background 0.15s;
-    }
-    .order-item:last-child { border-bottom: none; }
-    .order-item:hover { background: var(--cream); }
-    .order-num { font-weight: 700; font-size: 0.9rem; color: var(--dark-brown); }
-    .order-date { font-size: 0.78rem; color: #999; margin-top: 0.15rem; }
-    .order-items-count { font-size: 0.82rem; color: #777; margin-top: 0.15rem; }
-    .order-total {
-      margin-left: auto;
-      font-family: 'Playfair Display', serif;
-      font-size: 1.1rem;
-      font-weight: 700;
-      color: var(--orange);
-    }
-    .status-pill {
-      padding: 0.25rem 0.75rem;
-      border-radius: 20px;
-      font-size: 0.72rem;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      white-space: nowrap;
-    }
-    .status-pending { background: #fff3cd; color: #856404; }
-    .status-confirmed { background: #d1fae5; color: #065f46; }
-    .status-shipped { background: #dbeafe; color: #1e40af; }
-    .status-delivered { background: #d1fae5; color: #065f46; }
-    .status-cancelled { background: #fee2e2; color: #991b1b; }
-
-    /* ─── TRACKING TIMELINE ───────────────────── */
-    .track-banner {
-      background: linear-gradient(135deg, var(--dark-brown), #8b5e3c);
-      border-radius: var(--radius);
-      padding: 2rem;
-      margin-bottom: 1.5rem;
-      color: white;
-    }
-    .track-banner h2 {
-      font-family: 'Playfair Display', serif;
-      font-size: 1.4rem;
-      margin-bottom: 0.25rem;
-    }
-    .track-banner p { color: rgba(255,255,255,0.65); font-size: 0.88rem; }
-    .track-input-row {
-      display: flex;
-      gap: 0.75rem;
-      margin-top: 1.25rem;
-    }
-    .track-input-row input {
-      flex: 1;
-      padding: 0.75rem 1.1rem;
-      border-radius: 10px;
-      border: none;
-      font-family: 'DM Sans', sans-serif;
-      font-size: 0.95rem;
-      outline: none;
-    }
-
-    .timeline {
-      position: relative;
-      padding: 1rem 0;
-    }
-    .timeline::before {
-      content: '';
-      position: absolute;
-      left: 28px;
-      top: 0; bottom: 0;
-      width: 2px;
-      background: #f0ece8;
-    }
-    .tl-step {
-      display: flex;
-      gap: 1.25rem;
-      align-items: flex-start;
-      padding: 0.75rem 0;
-      position: relative;
-    }
-    .tl-dot {
-      width: 28px;
-      height: 28px;
-      border-radius: 50%;
-      background: #e8e0d8;
-      border: 2px solid #e8e0d8;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 0.7rem;
-      color: #aaa;
-      flex-shrink: 0;
-      margin-left: 14px;
-      z-index: 1;
-    }
-    .tl-dot.done {
-      background: var(--orange);
-      border-color: var(--orange);
-      color: white;
-    }
-    .tl-dot.current {
-      background: white;
-      border-color: var(--orange);
-      color: var(--orange);
-      box-shadow: 0 0 0 4px rgba(244,162,97,0.2);
-    }
-    .tl-content { flex: 1; padding-top: 0.15rem; }
-    .tl-title { font-weight: 600; font-size: 0.9rem; color: var(--dark-brown); }
-    .tl-title.muted { color: #bbb; font-weight: 400; }
-    .tl-sub { font-size: 0.78rem; color: #999; margin-top: 0.15rem; }
-
-    /* ─── DETAIL ROW ──────────────────────────── */
-    .detail-row {
-      display: flex;
-      align-items: flex-start;
-      gap: 1rem;
-      padding: 0.85rem 0;
-      border-bottom: 1px solid #f5f1ec;
-    }
-    .detail-row:last-child { border-bottom: none; }
-    .detail-row i {
-      color: var(--orange);
-      font-size: 1rem;
-      width: 22px;
-      text-align: center;
-      margin-top: 0.1rem;
-    }
-    .detail-row .d-label {
-      font-size: 0.78rem;
-      color: #999;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-    }
-    .detail-row .d-val { font-size: 0.95rem; color: var(--dark-brown); margin-top: 0.15rem; }
-
-    /* ─── WISHLIST / QUICK LINKS ──────────────── */
-    .quick-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 0.75rem;
-    }
-    .quick-card {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 0.6rem;
-      padding: 1.25rem 0.75rem;
-      border-radius: 14px;
-      background: var(--cream);
-      text-decoration: none;
-      color: var(--dark-brown);
-      font-size: 0.85rem;
-      font-weight: 600;
-      transition: all 0.2s;
-      border: 1.5px solid transparent;
-      text-align: center;
-    }
-    .quick-card:hover {
-      border-color: var(--orange);
-      background: white;
-      color: var(--orange);
-    }
-    .quick-card i { font-size: 1.6rem; color: var(--orange); }
-
-    /* ─── EMPTY STATE ─────────────────────────── */
-    .empty-state {
-      text-align: center;
-      padding: 3rem;
-      color: #aaa;
-    }
-    .empty-state i { font-size: 3rem; margin-bottom: 1rem; opacity: 0.4; }
-    .empty-state h4 { color: var(--dark-brown); font-size: 1.1rem; margin-bottom: 0.5rem; }
-    .empty-state p { font-size: 0.88rem; }
-
-    /* ─── TOAST ───────────────────────────────── */
-    .toast {
-      position: fixed;
-      bottom: 2rem;
-      right: 2rem;
-      background: var(--dark-brown);
-      color: white;
-      padding: 0.9rem 1.5rem;
-      border-radius: 12px;
-      font-size: 0.9rem;
-      box-shadow: 0 8px 30px rgba(92,61,46,0.3);
-      transform: translateY(80px);
-      opacity: 0;
-      transition: all 0.3s ease;
-      z-index: 999;
-      display: flex;
-      align-items: center;
-      gap: 0.6rem;
-    }
-    .toast.show { transform: translateY(0); opacity: 1; }
-    .toast.success i { color: #4ade80; }
-    .toast.error i { color: var(--accent); }
-
-    /* ─── ORDER MODAL ─────────────────────────── */
-    .modal-bg {
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.4);
-      backdrop-filter: blur(4px);
-      z-index: 200;
-      display: none;
-      align-items: center;
-      justify-content: center;
-      padding: 1rem;
-    }
-    .modal-bg.open { display: flex; }
-    .modal {
-      background: white;
-      border-radius: var(--radius);
-      max-width: 560px;
-      width: 100%;
-      max-height: 90vh;
-      overflow-y: auto;
-    }
-    .modal-head {
-      padding: 1.5rem;
-      border-bottom: 1px solid #f0ece8;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-    .modal-head h3 { font-family: 'Playfair Display', serif; font-size: 1.2rem; }
-    .modal-close {
-      background: none;
-      border: none;
-      font-size: 1.2rem;
-      cursor: pointer;
-      color: #aaa;
-      padding: 0.25rem;
-      line-height: 1;
-    }
-    .modal-body { padding: 1.5rem; }
-
-    /* ─── LOADER ──────────────────────────────── */
-    .skeleton {
-      background: linear-gradient(90deg, #f0ece8 25%, #fdf6ec 50%, #f0ece8 75%);
-      background-size: 200% 100%;
-      animation: shimmer 1.4s infinite;
-      border-radius: 8px;
-    }
-    @keyframes shimmer { to { background-position: -200% 0; } }
-
-    /* ─── LOADING SPINNER ─────────────────────── */
-    .spinner {
-      width: 36px; height: 36px;
-      border: 3px solid var(--cream);
-      border-top-color: var(--orange);
-      border-radius: 50%;
-      animation: spin 0.8s linear infinite;
-      margin: 2rem auto;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
-
-    /* ─── RESPONSIVE ──────────────────────────── */
-    @media (max-width: 768px) {
-      .profile-hero { flex-direction: column; text-align: center; }
-      .hero-stats { justify-content: center; }
-      .two-col, .three-col, .form-grid, .quick-grid { grid-template-columns: 1fr; }
-      .tab-btn span.tab-label { display: none; }
-      .page-wrap { padding: 1.25rem 1rem 3rem; }
-    }
-
-    /* ─── NOTIFICATION DOT ────────────────────── */
-    .notif-dot {
-      width: 8px; height: 8px;
-      background: var(--accent);
-      border-radius: 50%;
-      display: inline-block;
-      margin-left: 0.4rem;
-    }
-  </style>
+  <link rel="stylesheet" href="css/nav.css">
+  <link rel="stylesheet" href="css/profile.css">
 </head>
 <body>
 
 <!-- ─── NAVBAR ─────────────────────────────────────────── -->
 <header>
-  <div class="nav-container">
-    <a href="index.html" class="logo"><i class="fas fa-gift"></i> Cala-Cesta</a>
+  <div class="nav-wrap container">
+    <a href="index.html" class="logo"><i class="fas fa-gift"></i> Cala<span>-Cesta</span></a>
 
-    <nav class="nav-links">
-      <a href="index.html"><i class="fas fa-home"></i> Home</a>
-      <a href="index.html#featured-shops"><i class="fas fa-store"></i> Shops</a>
-      <a href="index.html#featured-products"><i class="fas fa-tag"></i> Products</a>
+    <nav>
+      <ul class="nav-links" id="navLinks">
+        <li><a href="index.html#featured-shops"><i class="fas fa-store"></i> Shops</a></li>
+        <li><a href="index.html#top-products">Products</a></li>
+        <li><a href="#promo">Deals</a></li>
+        <li><a href="#about">About</a></li>
+      </ul>
     </nav>
 
     <div class="nav-right">
-      <a href="cart.html" class="cart-link" id="cartLink">
+      <a href="cart.html" class="cart-btn" title="Cart">
         <i class="fas fa-shopping-cart"></i>
-        <span class="cart-badge" id="cartBadge" style="display:none">0</span>
+        <span class="cart-count" id="cartCount" style="display:none">0</span>
       </a>
-      <button class="btn-logout" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
+      <div id="authSection">
+        <a href="login.html" class="btn btn-outline">Login</a>
+        <a href="signup.html" class="btn btn-primary">Sign Up</a>
+      </div>
+      <button class="menu-toggle" id="menuToggle" aria-label="Menu">
+        <i class="fas fa-bars"></i>
+      </button>
     </div>
   </div>
 </header>
@@ -625,7 +64,26 @@
   <span id="toastMsg"></span>
 </div>
 
+<!-- ── RATE PRODUCT MODAL ── -->
+<div class="rate-modal-bg" id="rateModal">
+  <div class="rate-modal">
+    <div class="rate-modal-head">
+      <div>
+        <h3><i class="fas fa-star"></i> Rate Your Purchase</h3>
+        <p>Your feedback helps other buyers and supports local artisans</p>
+      </div>
+      <button class="rate-modal-close" onclick="closeRateModal()">✕</button>
+    </div>
+    <div class="rate-modal-body" id="rateModalBody"></div>
+  </div>
+</div>
 <!-- ─── SCRIPTS ────────────────────────────────────────── -->
+ <script src="js/auth.js"></script>
+ <script>
+  document.getElementById('menuToggle').addEventListener('click', () => {
+  document.getElementById('navLinks').classList.toggle('open');
+});
+ </script>
 <script>
 /* ═══════════════════════════════════════════════════
    GLOBALS
@@ -665,6 +123,10 @@ window.addEventListener('load', async () => {
 /* ═══════════════════════════════════════════════════
    DATA
 ═══════════════════════════════════════════════════ */
+function orderNum(o) {
+  return o.orderNumber || o._id?.slice(-6).toUpperCase() || '------';
+}
+
 async function loadAllData() {
   const token = localStorage.getItem('token');
   try {
@@ -863,30 +325,7 @@ function renderOrdersPanel() {
   `;
 }
 
-function orderRow(o) {
-  const statusClass = {
-    pending:'status-pending', confirmed:'status-confirmed',
-    shipped:'status-shipped', delivered:'status-delivered', cancelled:'status-cancelled'
-  }[o.status] || 'status-pending';
-  const itemCount = o.items?.length || 0;
-  return `
-    <div class="order-item" onclick="viewOrder('${o._id}')">
-      <div style="width:42px;height:42px;border-radius:10px;background:var(--cream);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-        <i class="fas fa-box" style="color:var(--orange)"></i>
-      </div>
-      <div style="flex:1;min-width:0">
-        <div class="order-num">#${o._id?.slice(-6).toUpperCase()}</div>
-        <div class="order-date">${new Date(o.createdAt).toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric'})}</div>
-        <div class="order-items-count">${itemCount} item${itemCount!==1?'s':''}</div>
-      </div>
-      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:0.4rem">
-        <span class="status-pill ${statusClass}">${o.status}</span>
-        <div class="order-total">₱${(o.total||0).toFixed(2)}</div>
-      </div>
-      <i class="fas fa-chevron-right" style="color:#ccc;margin-left:0.5rem"></i>
-    </div>
-  `;
-}
+
 
 function filterOrders(filter, btn) {
   document.querySelectorAll('#filterBtns .btn').forEach(b => {
@@ -928,7 +367,7 @@ function renderTrackPanel() {
               <i class="fas fa-truck" style="color:var(--orange)"></i>
             </div>
             <div style="flex:1">
-              <div class="order-num">#${o._id?.slice(-6).toUpperCase()}</div>
+              <div class="order-num">#${orderNum(o)}</div>
               <div class="order-date">${new Date(o.createdAt).toLocaleDateString()}</div>
             </div>
             <span class="status-pill ${{pending:'status-pending',confirmed:'status-confirmed',shipped:'status-shipped'}[o.status]||'status-pending'}">${o.status}</span>
@@ -944,7 +383,11 @@ function searchTrack() {
   const val = document.getElementById('trackInput').value.trim();
   if (!val) { showToast('Please enter an order number','error'); return; }
 
-  const found = allOrders.find(o => o._id?.slice(-6).toUpperCase() === val.toUpperCase() || o._id === val);
+  const found = allOrders.find(o =>
+  o.orderNumber === val.toUpperCase() ||
+  o._id?.slice(-6).toUpperCase() === val.toUpperCase() ||
+  o._id === val
+);
   if (!found) {
     document.getElementById('trackResult').innerHTML = `
       <div class="card" style="margin-bottom:1.5rem">
@@ -989,7 +432,7 @@ function trackOrder(orderId) {
   document.getElementById('trackResult').innerHTML = `
     <div class="card" style="margin-bottom:1.5rem">
       <div class="card-head">
-        <h3><i class="fas fa-map-marker-alt"></i> Order #${order._id?.slice(-6).toUpperCase()}</h3>
+        <h3><i class="fas fa-map-marker-alt"></i> Order #${orderNum(order)}</h3>
         <span class="status-pill status-${order.status}">${order.status}</span>
       </div>
       <div class="card-body">
@@ -1049,23 +492,98 @@ function renderSettingsPanel() {
       </div>
 
       <div style="display:flex;flex-direction:column;gap:1.5rem">
-        <!-- Security -->
+        <!-- Change Password -->
         <div class="card">
-          <div class="card-head"><h3><i class="fas fa-shield-alt"></i> Security</h3></div>
+          <div class="card-head"><h3><i class="fas fa-lock"></i> Change Password</h3></div>
           <div class="card-body">
-            <div class="detail-row">
-              <i class="fas fa-lock"></i>
-              <div style="flex:1"><div class="d-label">Password</div><div class="d-val">••••••••</div></div>
-              <button class="btn btn-outline btn-sm" onclick="showToast('Password change coming soon!','error')">Change</button>
+            <div class="form-group" style="margin-bottom:.75rem">
+              <label style="font-size:.82rem;color:#888;font-weight:600">Current Password</label>
+              <div style="position:relative">
+                <input type="password" id="currentPassword" placeholder="Enter current password"
+                  style="width:100%;padding:.6rem .9rem;border:1.5px solid #e8e4df;border-radius:10px;font-size:.9rem;outline:none;box-sizing:border-box;padding-right:2.5rem">
+                <i class="fas fa-eye" id="toggleCurrent"
+                  style="position:absolute;right:.75rem;top:50%;transform:translateY(-50%);cursor:pointer;color:#bbb;font-size:.85rem"
+                  onclick="togglePwVisibility('currentPassword','toggleCurrent')"></i>
+              </div>
             </div>
-            <div class="detail-row">
-              <i class="fas fa-envelope"></i>
-              <div style="flex:1"><div class="d-label">Email Verified</div><div class="d-val">✓ Verified</div></div>
+            <div class="form-group" style="margin-bottom:.75rem">
+              <label style="font-size:.82rem;color:#888;font-weight:600">New Password</label>
+              <div style="position:relative">
+                <input type="password" id="newPassword" placeholder="At least 6 characters"
+                  style="width:100%;padding:.6rem .9rem;border:1.5px solid #e8e4df;border-radius:10px;font-size:.9rem;outline:none;box-sizing:border-box;padding-right:2.5rem">
+                <i class="fas fa-eye" id="toggleNew"
+                  style="position:absolute;right:.75rem;top:50%;transform:translateY(-50%);cursor:pointer;color:#bbb;font-size:.85rem"
+                  onclick="togglePwVisibility('newPassword','toggleNew')"></i>
+              </div>
             </div>
+            <div class="form-group" style="margin-bottom:1rem">
+              <label style="font-size:.82rem;color:#888;font-weight:600">Confirm New Password</label>
+              <div style="position:relative">
+                <input type="password" id="confirmPassword" placeholder="Re-enter new password"
+                  style="width:100%;padding:.6rem .9rem;border:1.5px solid #e8e4df;border-radius:10px;font-size:.9rem;outline:none;box-sizing:border-box;padding-right:2.5rem">
+                <i class="fas fa-eye" id="toggleConfirm"
+                  style="position:absolute;right:.75rem;top:50%;transform:translateY(-50%);cursor:pointer;color:#bbb;font-size:.85rem"
+                  onclick="togglePwVisibility('confirmPassword','toggleConfirm')"></i>
+              </div>
+            </div>
+            <div id="pwStrengthBar" style="margin-bottom:.75rem;display:none">
+              <div style="font-size:.75rem;color:#888;margin-bottom:.25rem">Password strength: <span id="pwStrengthLabel"></span></div>
+              <div style="height:4px;background:#eee;border-radius:99px;overflow:hidden">
+                <div id="pwStrengthFill" style="height:100%;border-radius:99px;transition:width .3s,background .3s"></div>
+              </div>
+            </div>
+            <button class="btn btn-primary btn-full" onclick="changePassword()">
+              <i class="fas fa-key"></i> Update Password
+            </button>
           </div>
         </div>
 
-        <!-- Account -->
+        <!-- Email Verification -->
+        <div class="card">
+          <div class="card-head"><h3><i class="fas fa-envelope-open-text"></i> Email Verification</h3></div>
+          <div class="card-body">
+            ${currentUser.emailVerified ? `
+              <div style="display:flex;align-items:center;gap:.6rem;padding:.75rem 1rem;background:#f0fff4;border-radius:10px;border:1px solid #c6f6d5">
+                <i class="fas fa-check-circle" style="color:#276749;font-size:1.1rem"></i>
+                <div>
+                  <div style="font-weight:600;font-size:.9rem;color:#276749">Email Verified</div>
+                  <div style="font-size:.78rem;color:#68d391">${currentUser.email}</div>
+                </div>
+              </div>` : `
+              <div style="display:flex;align-items:center;gap:.6rem;padding:.75rem 1rem;background:#fffbeb;border-radius:10px;border:1px solid #fde68a;margin-bottom:1rem">
+                <i class="fas fa-exclamation-triangle" style="color:#d97706;font-size:1.1rem"></i>
+                <div>
+                  <div style="font-weight:600;font-size:.9rem;color:#d97706">Email Not Verified</div>
+                  <div style="font-size:.78rem;color:#b7791f">${currentUser.email}</div>
+                </div>
+              </div>
+              <div id="verifyStep1">
+                <button class="btn btn-primary btn-full" onclick="sendVerificationCode()">
+                  <i class="fas fa-paper-plane"></i> Send Verification Code
+                </button>
+              </div>
+              <div id="verifyStep2" style="display:none;margin-top:.75rem">
+                <label style="font-size:.82rem;color:#888;font-weight:600;display:block;margin-bottom:.4rem">
+                  Enter the 6-digit code sent to your email
+                </label>
+                <div style="display:flex;gap:.5rem">
+                  <input type="text" id="verifyCodeInput" maxlength="6" placeholder="000000"
+                    style="flex:1;padding:.6rem .9rem;border:1.5px solid #e8e4df;border-radius:10px;font-size:1rem;letter-spacing:.2em;text-align:center;outline:none">
+                  <button class="btn btn-primary" onclick="verifyEmailCode()" style="white-space:nowrap">
+                    <i class="fas fa-check"></i> Verify
+                  </button>
+                </div>
+                <div style="display:flex;justify-content:space-between;margin-top:.5rem">
+                  <span style="font-size:.75rem;color:#aaa" id="codeExpiry">Code expires in 10:00</span>
+                  <button style="font-size:.75rem;color:var(--orange,#c2612a);background:none;border:none;cursor:pointer;font-weight:600"
+                    onclick="sendVerificationCode()">Resend code</button>
+                </div>
+              </div>`
+            }
+          </div>
+        </div>
+
+        <!-- Account Info -->
         <div class="card">
           <div class="card-head"><h3><i class="fas fa-info-circle"></i> Account</h3></div>
           <div class="card-body">
@@ -1144,33 +662,38 @@ function viewOrder(orderId) {
     </div>
   `).join('');
 
-  document.getElementById('modalTitle').textContent = `Order #${order._id?.slice(-6).toUpperCase()}`;
-  document.getElementById('modalBody').innerHTML = `
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem">
-      <div>
-        <div style="font-size:0.8rem;color:#999">Date Placed</div>
-        <div style="font-weight:600">${new Date(order.createdAt).toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'})}</div>
-      </div>
-      <span class="status-pill ${statusClass}">${order.status}</span>
+  document.getElementById('modalTitle').textContent = `Order #${order.orderNumber || order._id?.slice(-6).toUpperCase()}`;
+document.getElementById('modalBody').innerHTML = `
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem">
+    <div>
+      <div style="font-size:0.8rem;color:#999">Date Placed</div>
+      <div style="font-weight:600">${new Date(order.createdAt).toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'})}</div>
     </div>
-    <h4 style="font-size:0.85rem;color:#999;text-transform:uppercase;letter-spacing:.05em;margin-bottom:0.5rem">Items</h4>
-    ${items || '<p style="color:#ccc;text-align:center;padding:1rem">No item details available</p>'}
-    <div style="display:flex;justify-content:space-between;align-items:center;padding:1rem 0;margin-top:0.5rem;border-top:2px solid #f0ece8">
-      <span style="font-weight:700">Total</span>
-      <span style="font-family:\'Playfair Display\',serif;font-size:1.3rem;color:var(--orange)">₱${(order.total||0).toFixed(2)}</span>
-    </div>
-    ${order.shippingAddress ? `
-    <div style="margin-top:1rem;padding:1rem;background:var(--cream);border-radius:12px;font-size:0.88rem">
-      <div style="font-weight:600;margin-bottom:0.25rem"><i class="fas fa-map-marker-alt" style="color:var(--orange)"></i> Shipping Address</div>
-      <div style="color:#666">${order.shippingAddress}</div>
-    </div>` : ''}
-    <div style="display:flex;gap:0.75rem;margin-top:1.5rem">
-      <button class="btn btn-primary" style="flex:1" onclick="closeModal();trackOrder('${order._id}');switchTab('track')">
-        <i class="fas fa-map-marker-alt"></i> Track Order
-      </button>
-      <button class="btn btn-outline" onclick="closeModal()">Close</button>
-    </div>
-  `;
+    <span class="status-pill ${statusClass}">${order.status}</span>
+  </div>
+  <h4 style="font-size:0.85rem;color:#999;text-transform:uppercase;letter-spacing:.05em;margin-bottom:0.5rem">Items</h4>
+  ${items || '<p style="color:#ccc;text-align:center;padding:1rem">No item details available</p>'}
+  <div style="display:flex;justify-content:space-between;align-items:center;padding:1rem 0;margin-top:0.5rem;border-top:2px solid #f0ece8">
+    <span style="font-weight:700">Total</span>
+    <span style="font-family:'Playfair Display',serif;font-size:1.3rem;color:var(--orange)">₱${(order.total||0).toFixed(2)}</span>
+  </div>
+  ${order.shippingAddress ? `
+  <div style="margin-top:1rem;padding:1rem;background:var(--cream);border-radius:12px;font-size:0.88rem">
+    <div style="font-weight:600;margin-bottom:0.25rem"><i class="fas fa-map-marker-alt" style="color:var(--orange)"></i> Shipping Address</div>
+    <div style="color:#666">${order.shippingAddress}</div>
+  </div>` : ''}
+  <div style="display:flex;gap:0.75rem;margin-top:1.5rem;flex-wrap:wrap;">
+    <button class="btn btn-primary" style="flex:1" onclick="closeModal();trackOrder('${order._id}');switchTab('track')">
+      <i class="fas fa-map-marker-alt"></i> Track Order
+    </button>
+    ${order.status === 'pending' ? `
+    <button class="btn btn-outline" style="flex:1;color:#dc3545;border-color:#dc3545;" 
+      onclick="closeModal();cancelOrder('${order._id}')">
+      <i class="fas fa-times"></i> Cancel Order
+    </button>` : ''}
+    <button class="btn btn-outline" onclick="closeModal()">Close</button>
+  </div>
+`;
   document.getElementById('orderModal').classList.add('open');
 }
 
@@ -1202,6 +725,403 @@ function showToast(msg, type='success') {
   document.getElementById('toastMsg').textContent = msg;
   t.classList.add('show');
   setTimeout(() => t.classList.remove('show'), 3500);
+}
+//=====================================================
+// ── STATE for rating modal ──
+let rateState = { productId: null, productName: null, productPrice: null, productImage: null, selectedRating: 0 };
+const rateLabels = ['','😞 Poor','😐 Fair','🙂 Good','😊 Great','🤩 Excellent!'];
+
+//=============Order History=====================
+function orderRow(o) {
+  const statusClass = {
+    pending:'status-pending', confirmed:'status-confirmed',
+    shipped:'status-shipped', delivered:'status-delivered', cancelled:'status-cancelled'
+  }[o.status] || 'status-pending';
+  const itemCount = o.items?.length || 0;
+
+  // Rate buttons for delivered orders
+  let rateBtns = '';
+  if (o.status === 'delivered' && o.items?.length) {
+    rateBtns = `<div style="display:flex;flex-wrap:wrap;gap:.4rem;margin-top:.4rem">
+      ${o.items.map(item => {
+        const rated = (window.__ratedProducts || []).includes(item.productId);
+        return rated
+          ? `<span class="rated-badge"><i class="fas fa-check"></i> Rated</span>`
+          : `<span class="rate-badge" onclick="event.stopPropagation();openRateModal('${item.productId}','${(item.productName||'Product').replace(/'/g,"\\'")}',${item.price},'')">
+               <i class="fas fa-star"></i> Rate "${(item.productName||'Product').substring(0,20)}${(item.productName||'').length>20?'…':''}"
+             </span>`;
+      }).join('')}
+    </div>`;
+  }
+
+  return `
+    <div class="order-item" onclick="viewOrder('${o._id}')">
+      <div style="width:42px;height:42px;border-radius:10px;background:var(--cream);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+        <i class="fas fa-box" style="color:var(--orange)"></i>
+      </div>
+      <div style="flex:1;min-width:0">
+        <div class="order-num">#${o.orderNumber || o._id?.slice(-6).toUpperCase()}</div>
+        <div class="order-date">${new Date(o.createdAt).toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric'})}</div>
+        <div class="order-items-count">${itemCount} item${itemCount!==1?'s':''}</div>
+        ${rateBtns}
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:.4rem">
+        <span class="status-pill ${statusClass}">${o.status}</span>
+        <div class="order-total">₱${(o.total||0).toFixed(2)}</div>
+      </div>
+      <i class="fas fa-chevron-right" style="color:#ccc;margin-left:.5rem"></i>
+    </div>`;
+}
+
+// ── OPEN RATE MODAL ──
+async function openRateModal(productId, productName, productPrice, productImage) {
+  // Check if already reviewed
+  const token = localStorage.getItem('token');
+  try {
+    const res = await fetch(`/api/products/${productId}/review-eligibility`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    const data = await res.json();
+    if (!data.canReview && data.reason === 'already_reviewed') {
+      showToast('You\'ve already reviewed this product!', 'error');
+      // Mark as rated
+      if (!window.__ratedProducts) window.__ratedProducts = [];
+      window.__ratedProducts.push(productId);
+      renderPage(); switchTab('orders');
+      return;
+    }
+  } catch {}
+
+  rateState = { productId, productName, productPrice, productImage, selectedRating: 0 };
+
+  // Fetch product image if missing
+  let imgSrc = productImage || 'https://images.unsplash.com/photo-1608043152266-119cb09fc56e?w=120&fit=crop';
+  try {
+    if (!productImage) {
+      const pRes = await fetch(`/api/products/${productId}`);
+      if (pRes.ok) { const p = await pRes.json(); imgSrc = p.image || imgSrc; rateState.productImage = imgSrc; }
+    }
+  } catch {}
+
+  document.getElementById('rateModalBody').innerHTML = `
+    <div class="rate-product-preview">
+      <img src="${imgSrc}" class="rate-product-img" alt="${productName}" onerror="this.src='https://images.unsplash.com/photo-1608043152266-119cb09fc56e?w=120&fit=crop'">
+      <div>
+        <div class="rate-product-name">${productName}</div>
+        <div class="rate-product-price">₱${parseFloat(productPrice||0).toFixed(2)}</div>
+      </div>
+    </div>
+
+    <div style="text-align:center;margin-bottom:.5rem;font-size:.88rem;font-weight:600;color:#888">How would you rate this product?</div>
+    <div class="rate-star-row" id="rateStarRow">
+      <i class="far fa-star" data-val="1"></i>
+      <i class="far fa-star" data-val="2"></i>
+      <i class="far fa-star" data-val="3"></i>
+      <i class="far fa-star" data-val="4"></i>
+      <i class="far fa-star" data-val="5"></i>
+    </div>
+    <div class="rate-label" id="rateLabel">Tap a star to rate</div>
+
+    <input type="text" class="rate-input" id="rateTitle" placeholder="Give your review a title (optional)">
+    <textarea class="rate-input" id="rateComment" placeholder="Share your experience — what did you love about it? How was the quality and packaging?" rows="3"></textarea>
+
+    <button class="rate-submit-btn" id="rateSubmitBtn" onclick="submitRating()">
+      <i class="fas fa-paper-plane"></i> Submit Review
+    </button>
+    <p style="text-align:center;font-size:.78rem;color:#aaa;margin-top:.75rem">Only customers who purchased this product can leave a review.</p>
+  `;
+
+  // Wire up star picker
+  const stars = document.querySelectorAll('#rateStarRow i');
+  stars.forEach(star => {
+    star.addEventListener('mouseover', () => highlightRateStars(parseInt(star.dataset.val)));
+    star.addEventListener('mouseout', () => highlightRateStars(rateState.selectedRating));
+    star.addEventListener('click', () => {
+      rateState.selectedRating = parseInt(star.dataset.val);
+      highlightRateStars(rateState.selectedRating);
+      document.getElementById('rateLabel').textContent = rateLabels[rateState.selectedRating];
+    });
+  });
+
+  document.getElementById('rateModal').classList.add('open');
+}
+
+function highlightRateStars(n) {
+  const stars = document.querySelectorAll('#rateStarRow i');
+  stars.forEach(s => {
+    const v = parseInt(s.dataset.val);
+    s.className = v <= n ? 'fas fa-star lit' : 'far fa-star';
+  });
+}
+
+function closeRateModal() {
+  document.getElementById('rateModal').classList.remove('open');
+  rateState = { productId: null, productName: null, productPrice: null, productImage: null, selectedRating: 0 };
+}
+
+// ── SUBMIT RATING ──
+async function submitRating() {
+  const token = localStorage.getItem('token');
+  if (!token) { showToast('Please login first', 'error'); return; }
+  if (!rateState.selectedRating) { showToast('Please select a star rating', 'error'); return; }
+
+  const comment = document.getElementById('rateComment').value.trim();
+  const title = document.getElementById('rateTitle').value.trim();
+  if (!comment) { showToast('Please write a short review', 'error'); return; }
+
+  const btn = document.getElementById('rateSubmitBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting…';
+
+  try {
+    const res = await fetch(`/api/products/${rateState.productId}/reviews`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ rating: rateState.selectedRating, title, comment })
+    });
+    const data = await res.json();
+
+    if (res.ok) {
+      // Mark product as rated locally
+      if (!window.__ratedProducts) window.__ratedProducts = [];
+      window.__ratedProducts.push(rateState.productId);
+
+      showToast('Review submitted! Thank you 🙏');
+      closeRateModal();
+      // Refresh orders panel to reflect rated state
+      renderPage();
+      switchTab('orders');
+    } else {
+      showToast(data.message || 'Submission failed', 'error');
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fas fa-paper-plane"></i> Submit Review';
+    }
+  } catch {
+    showToast('Network error — please try again', 'error');
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fas fa-paper-plane"></i> Submit Review';
+  }
+}
+
+// ── PRE-LOAD RATED PRODUCTS (on page load) ──
+async function loadRatedProducts() {
+  const token = localStorage.getItem('token');
+  if (!token) return;
+  try {
+    const res = await fetch('/api/customer/reviewed-products', {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    if (res.ok) {
+      const data = await res.json();
+      window.__ratedProducts = data.productIds || [];
+    }
+  } catch {
+    window.__ratedProducts = [];
+  }
+}
+
+// ── CLOSE RATE MODAL on backdrop click ──
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('rateModal')?.addEventListener('click', e => {
+    if (e.target === document.getElementById('rateModal')) closeRateModal();
+  });
+});
+
+/* ═══════════════════════════════════════════════════
+   CANCEL ORDER
+═══════════════════════════════════════════════════ */
+async function cancelOrder(orderId) {
+  if (!confirm('Are you sure you want to cancel this order?')) return;
+
+  const token = localStorage.getItem('token');
+  try {
+    const res = await fetch(`/api/customer/orders/${orderId}/cancel`, {
+      method: 'PUT',
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+
+    const data = await res.json();
+
+    if (res.ok) {
+      // Update local order status immediately
+      const order = allOrders.find(o => o._id === orderId);
+      if (order) order.status = 'cancelled';
+
+      showToast('Order cancelled successfully');
+      renderPage();
+      switchTab('orders');
+    } else {
+      showToast(data.message || 'Failed to cancel order', 'error');
+    }
+  } catch {
+    showToast('Network error — please try again', 'error');
+  }
+}
+
+/* ═══════════════════════════════════════════════════
+   CHANGE PASSWORD
+═══════════════════════════════════════════════════ */
+function togglePwVisibility(inputId, iconId) {
+  const input = document.getElementById(inputId);
+  const icon  = document.getElementById(iconId);
+  if (!input) return;
+  const isHidden = input.type === 'password';
+  input.type = isHidden ? 'text' : 'password';
+  icon.className = isHidden ? 'fas fa-eye-slash' : 'fas fa-eye';
+  icon.style.cssText = icon.style.cssText; // preserve inline styles
+}
+
+// Wire up strength meter when new password is typed
+document.addEventListener('input', e => {
+  if (e.target.id !== 'newPassword') return;
+  const val = e.target.value;
+  const bar  = document.getElementById('pwStrengthBar');
+  const fill = document.getElementById('pwStrengthFill');
+  const lbl  = document.getElementById('pwStrengthLabel');
+  if (!bar) return;
+
+  if (!val) { bar.style.display = 'none'; return; }
+  bar.style.display = 'block';
+
+  let score = 0;
+  if (val.length >= 6)  score++;
+  if (val.length >= 10) score++;
+  if (/[A-Z]/.test(val)) score++;
+  if (/[0-9]/.test(val)) score++;
+  if (/[^A-Za-z0-9]/.test(val)) score++;
+
+  const levels = [
+    { label: 'Very weak', color: '#e53e3e', width: '20%' },
+    { label: 'Weak',      color: '#dd6b20', width: '40%' },
+    { label: 'Fair',      color: '#d69e2e', width: '60%' },
+    { label: 'Strong',    color: '#38a169', width: '80%' },
+    { label: 'Very strong', color: '#276749', width: '100%' },
+  ];
+  const lvl = levels[Math.min(score, 4)];
+  fill.style.width = lvl.width;
+  fill.style.background = lvl.color;
+  lbl.textContent = lvl.label;
+  lbl.style.color = lvl.color;
+});
+
+async function changePassword() {
+  const currentPassword = document.getElementById('currentPassword')?.value.trim();
+  const newPassword     = document.getElementById('newPassword')?.value.trim();
+  const confirmPassword = document.getElementById('confirmPassword')?.value.trim();
+
+  if (!currentPassword) return showToast('Enter your current password', 'error');
+  if (!newPassword)     return showToast('Enter a new password', 'error');
+  if (newPassword.length < 6) return showToast('New password must be at least 6 characters', 'error');
+  if (newPassword !== confirmPassword) return showToast('Passwords do not match', 'error');
+  if (currentPassword === newPassword) return showToast('New password must be different from current', 'error');
+
+  const token = localStorage.getItem('token');
+  try {
+    const res = await fetch('/api/customer/change-password', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+      body: JSON.stringify({ currentPassword, newPassword })
+    });
+    const data = await res.json();
+    if (res.ok) {
+      showToast('Password changed successfully!');
+      // Clear fields
+      ['currentPassword','newPassword','confirmPassword'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = '';
+      });
+      const bar = document.getElementById('pwStrengthBar');
+      if (bar) bar.style.display = 'none';
+    } else {
+      showToast(data.message || 'Failed to change password', 'error');
+    }
+  } catch {
+    showToast('Network error — please try again', 'error');
+  }
+}
+
+/* ═══════════════════════════════════════════════════
+   EMAIL VERIFICATION
+═══════════════════════════════════════════════════ */
+let verifyCountdown = null;
+
+async function sendVerificationCode() {
+  const token = localStorage.getItem('token');
+  try {
+    const res = await fetch('/api/customer/send-verification', {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    const data = await res.json();
+
+    if (res.ok) {
+      showToast('Verification code sent!');
+      // Show code input step
+      const step1 = document.getElementById('verifyStep1');
+      const step2 = document.getElementById('verifyStep2');
+      if (step1) step1.style.display = 'none';
+      if (step2) step2.style.display = 'block';
+      startVerifyCountdown(10 * 60);
+
+      // Dev only: auto-fill the code
+      if (data.devCode) {
+        const input = document.getElementById('verifyCodeInput');
+        if (input) input.value = data.devCode;
+        showToast(`Dev mode — code: ${data.devCode}`, 'error');
+      }
+    } else {
+      showToast(data.message || 'Failed to send code', 'error');
+    }
+  } catch {
+    showToast('Network error — please try again', 'error');
+  }
+}
+
+function startVerifyCountdown(seconds) {
+  if (verifyCountdown) clearInterval(verifyCountdown);
+  const el = document.getElementById('codeExpiry');
+  let remaining = seconds;
+
+  verifyCountdown = setInterval(() => {
+    remaining--;
+    if (!document.getElementById('codeExpiry')) { clearInterval(verifyCountdown); return; }
+    const m = Math.floor(remaining / 60).toString().padStart(2, '0');
+    const s = (remaining % 60).toString().padStart(2, '0');
+    if (el) el.textContent = `Code expires in ${m}:${s}`;
+    if (remaining <= 0) {
+      clearInterval(verifyCountdown);
+      if (el) el.textContent = 'Code expired — please resend';
+      if (el) el.style.color = '#e53e3e';
+    }
+  }, 1000);
+}
+
+async function verifyEmailCode() {
+  const code  = document.getElementById('verifyCodeInput')?.value.trim();
+  const token = localStorage.getItem('token');
+
+  if (!code || code.length !== 6) return showToast('Enter the 6-digit code', 'error');
+
+  try {
+    const res = await fetch('/api/customer/verify-email', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+      body: JSON.stringify({ code })
+    });
+    const data = await res.json();
+
+    if (res.ok) {
+      if (verifyCountdown) clearInterval(verifyCountdown);
+      showToast('Email verified successfully! 🎉');
+      currentUser.emailVerified = true;
+      renderPage();
+      switchTab('settings');
+    } else {
+      showToast(data.message || 'Invalid code', 'error');
+    }
+  } catch {
+    showToast('Network error — please try again', 'error');
+  }
 }
 
 /* ═══════════════════════════════════════════════════

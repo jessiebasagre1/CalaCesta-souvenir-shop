@@ -9,22 +9,30 @@
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
 <body>
-    <!-- ─── NAVBAR ─────────────────────────────────────────── -->
+   <!-- ─── NAVBAR ─────────────────────────────────────────── -->
 <header>
-  <div class="nav-container">
-    <a href="index.html" class="logo"><i class="fas fa-gift"></i> Cala-Cesta</a>
+  <div class="nav-wrap container">
+    <a href="index.html" class="logo"><i class="fas fa-gift"></i> Cala<span>-Cesta</span></a>
 
-    <nav class="nav-links">
-      <a href="index.html"><i class="fas fa-home"></i> Home</a>
-      <a href="index.html#featured-shops"><i class="fas fa-store"></i> Shops</a>
-      <a href="index.html#featured-products"><i class="fas fa-tag"></i> Products</a>
-      <a href="orders.html"><i class="fas fa-box"></i> Orders</a>
+    <nav>
+      <ul class="nav-links" id="navLinks">
+        <li><a href="index.html"><i class="fas fa-home"></i> Home</a></li>
+        <li><a href="index.html#featured-shops"><i class="fas fa-store"></i> Shops</a></li>
+        <li><a href="index.html#top-products">Products</a></li>
+        <li><a href="#promo">Deals</a></li>
+        <li><a href="#about">About</a></li>
+      </ul>
     </nav>
 
     <div class="nav-right">
-      <div class="auth-section" id="authSection">
-        <!-- Dynamic auth buttons/menu -->
+      <div id="authSection">
+        <a href="login.html" class="btn btn-outline">Login</a>
+        <a href="signup.html" class="btn btn-primary">Sign Up</a>
       </div>
+      <button class="menu-toggle" id="menuToggle" aria-label="Menu">
+        <i class="fas fa-bars"></i>
+      </button>
+    </div>
   </div>
 </header>
 <!------------------------------------------------------------------------>
@@ -62,6 +70,11 @@
     </div>
   </div>
 <script src="js/auth.js"></script>
+ <script>
+  document.getElementById('menuToggle').addEventListener('click', () => {
+  document.getElementById('navLinks').classList.toggle('open');
+});
+ </script>
 <script>
   window.addEventListener('load', checkAuth);
   

@@ -40,7 +40,7 @@ async function loadAuthState() {
           authSection.innerHTML = `
             <div class="user-menu">
               <a href="cart.html" class="cart-link" title="Shopping Cart">
-                <i class="fas fa-shopping-cart"></i>
+                
                 ${cartCount > 0 ? `<span class="cart-count">${cartCount}</span>` : ''}
               </a>
               <div class="user-info">

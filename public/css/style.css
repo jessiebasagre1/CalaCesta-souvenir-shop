@@ -103,6 +103,7 @@ header {
   text-decoration: none;
   display: inline-block;
   text-align: center;
+  
 }
 
 .btn-primary {
@@ -115,6 +116,23 @@ header {
   transform: translateY(-2px);
 }
 
+.summary-card .btn-primary {
+  background: var(--orange) !important;
+  color: white !important;
+  border: none;
+  width: 100%;
+  margin-top: 1.5rem;
+  display: block;
+}
+
+.summary-card .btn-secondary {
+  background: transparent;
+  color: var(--dark-brown);
+  border: 2px solid var(--light-brown);
+  width: 100%;
+  margin-top: 0.5rem;
+  display: block;
+}
 .btn-secondary {
   background: transparent;
   color: var(--dark-brown);

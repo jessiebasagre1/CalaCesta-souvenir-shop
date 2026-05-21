@@ -1,0 +1,6 @@
+The devCode is returned in the API response only when
+NODE_ENV is not production, so during development the
+code auto-fills in the input. In production, replace
+the send-verification route's console.log with actual 
+email sending via nodemailer or SendGrid, and remove 
+the devCode from the response.

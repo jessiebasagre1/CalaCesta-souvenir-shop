@@ -4,13 +4,34 @@ const cors = require('cors');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const path = require('path');
+const multer = require('multer');
+const fs = require('fs');
 
 const app = express();
 
 require('dotenv').config();
 const PORT = process.env.PORT || 3000;
 const JWT_SECRET = process.env.JWT_SECRET;
+//Product image upload
+const uploadDir = path.join(__dirname, 'public', 'uploads');
+if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
 
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => cb(null, uploadDir),
+  filename: (req, file, cb) => {
+    const ext = path.extname(file.originalname);
+    cb(null, `product-${Date.now()}-${Math.random().toString(36).slice(2)}${ext}`);
+  }
+});
+
+const upload = multer({
+  storage,
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype.startsWith('image/')) cb(null, true);
+    else cb(new Error('Only images allowed'));
+  }
+});
 // Middleware
 app.use(cors({ origin: '*' }));
 app.use(express.json());
@@ -58,6 +79,7 @@ const productSchema = new mongoose.Schema({
   price: { type: Number, required: true },
   stock: { type: Number, default: 0 },
   image: String,
+  images: [String], 
   shopId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   businessId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   category: String,
@@ -78,7 +100,8 @@ const orderSchema = new mongoose.Schema({
   total: { type: Number, required: true },
   status: { type: String, enum: ['pending', 'confirmed', 'shipped', 'delivered', 'cancelled'], default: 'pending' },
   shippingAddress: String,
-  trackingNumber: String
+  trackingNumber: String,
+  orderNumber: { type: String }  
 }, { timestamps: true });
 const Order = mongoose.model('Order', orderSchema);
 
@@ -91,6 +114,385 @@ const cartSchema = new mongoose.Schema({
   total: { type: Number, default: 0 }
 }, { timestamps: true });
 const Cart = mongoose.model('Cart', cartSchema);
+
+// ── REVIEW SCHEMA ─────────────────────────────────────────────────
+
+const reviewSchema = new mongoose.Schema({
+  productId:  { type: mongoose.Schema.Types.ObjectId, ref: 'Product', required: true },
+  userId:     { type: mongoose.Schema.Types.ObjectId, ref: 'User',    required: true },
+  userName:   { type: String, required: true },
+  rating:     { type: Number, required: true, min: 1, max: 5 },
+  title:      { type: String, trim: true, maxlength: 120 },
+  comment:    { type: String, required: true, trim: true, maxlength: 2000 },
+  verified:   { type: Boolean, default: false },  // true = confirmed delivered purchase
+  helpful:    { type: Number, default: 0 },
+  orderId:    { type: mongoose.Schema.Types.ObjectId, ref: 'Order' }
+}, { timestamps: true });
+
+// One review per user per product
+reviewSchema.index({ productId: 1, userId: 1 }, { unique: true });
+const Review = mongoose.model('Review', reviewSchema);
+
+// ── HELPER: update product avg rating ────────────────────────────
+async function refreshProductRating(productId) {
+  const agg = await Review.aggregate([
+    { $match: { productId: new mongoose.Types.ObjectId(productId) } },
+    { $group: { _id: null, avg: { $avg: '$rating' }, count: { $sum: 1 } } }
+  ]);
+  const avg = agg[0]?.avg || 0;
+  await Product.findByIdAndUpdate(productId, { avgRating: parseFloat(avg.toFixed(2)), reviewCount: agg[0]?.count || 0 });
+}
+//----Product Image Overview Route----------------------
+app.post('/api/upload', upload.array('images', 10), (req, res) => {
+  try {
+    const token = req.headers.authorization?.split(' ')[1];
+    if (!token) return res.status(401).json({ message: 'No token' });
+    jwt.verify(token, JWT_SECRET); // just verify, no user needed
+
+    const urls = req.files.map(f => `/uploads/${f.filename}`);
+    res.json({ urls });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+// ── GET REVIEWS FOR A PRODUCT ─────────────────────────────────────
+// ── RELATED PRODUCTS ROUTE FIX ────────────────────────────────────
+// Replace the existing /api/products/:shopId/related with:
+app.get('/api/products/related', async (req, res) => {
+  try {
+    const { shopId, category, exclude } = req.query;
+    const match = { status: 'active', stock: { $gt: 0 } };
+    if (shopId && shopId !== 'undefined') match.businessId = shopId;
+    if (category) match.category = category;
+    if (exclude && mongoose.Types.ObjectId.isValid(exclude)) {
+      match._id = { $ne: new mongoose.Types.ObjectId(exclude) };
+    }
+    const products = await Product.find(match).limit(8).lean();
+    res.json(products);
+  } catch (error) {
+    res.status(500).json([]);
+  }
+});
+
+
+app.get('/api/products/:productId/reviews', async (req, res) => {
+  try {
+    const { productId } = req.params;
+    const reviews = await Review.find({ productId })
+      .sort({ createdAt: -1 })
+      .lean();
+    res.json({ reviews, count: reviews.length });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+//=============================
+//Products Sold
+//============================
+app.get('/api/products/:productId/sold-count', async (req, res) => {
+  try {
+    const { productId } = req.params;
+ 
+    const result = await Order.aggregate([
+      {
+        $match: {
+          status: 'delivered',
+          'items.productId': productId
+        }
+      },
+      { $unwind: '$items' },
+      {
+        $match: {
+          'items.productId': productId
+        }
+      },
+      {
+        $group: {
+          _id: null,
+          soldCount: { $sum: '$items.quantity' }
+        }
+      }
+    ]);
+ 
+    const soldCount = result[0]?.soldCount || 0;
+    res.json({ soldCount });
+  } catch (error) {
+    res.status(500).json({ soldCount: 0, message: error.message });
+  }
+});
+
+// ── POST A REVIEW ─────────────────────────────────────────────────
+app.post('/api/products/:productId/reviews', async (req, res) => {
+  try {
+    const token = req.headers.authorization?.split(' ')[1];
+    if (!token) return res.status(401).json({ message: 'Login required to review' });
+
+    const decoded = jwt.verify(token, JWT_SECRET);
+    const user = await User.findById(decoded.userId);
+    if (!user || user.userType !== 'customer') {
+      return res.status(403).json({ message: 'Only customers can review products' });
+    }
+
+    const { productId } = req.params;
+    const { rating, title, comment } = req.body;
+
+    if (!rating || rating < 1 || rating > 5) {
+      return res.status(400).json({ message: 'Rating must be between 1 and 5' });
+    }
+    if (!comment?.trim()) {
+      return res.status(400).json({ message: 'Review comment is required' });
+    }
+
+    // Check if user has a delivered order with this product
+    const deliveredOrder = await Order.findOne({
+      customerId: user._id,
+      status: 'delivered',
+      'items.productId': productId
+    });
+
+    // Check for duplicate review
+    const existing = await Review.findOne({ productId, userId: user._id });
+    if (existing) {
+      return res.status(400).json({ message: 'You have already reviewed this product' });
+    }
+
+    const review = new Review({
+      productId,
+      userId: user._id,
+      userName: user.name,
+      rating: parseInt(rating),
+      title: title?.trim() || '',
+      comment: comment.trim(),
+      verified: !!deliveredOrder,
+      orderId: deliveredOrder?._id
+    });
+
+    await review.save();
+    await refreshProductRating(productId);
+
+    res.status(201).json({ message: 'Review submitted!', review });
+  } catch (error) {
+    if (error.code === 11000) {
+      return res.status(400).json({ message: 'You have already reviewed this product' });
+    }
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// ── CHECK REVIEW ELIGIBILITY ──────────────────────────────────────
+// Returns whether the current user can review a product and if they already have
+app.get('/api/products/:productId/review-eligibility', async (req, res) => {
+  try {
+    const token = req.headers.authorization?.split(' ')[1];
+    if (!token) return res.json({ canReview: false, reason: 'not_logged_in' });
+
+    const decoded = jwt.verify(token, JWT_SECRET);
+    const user = await User.findById(decoded.userId);
+    if (!user || user.userType !== 'customer') {
+      return res.json({ canReview: false, reason: 'not_customer' });
+    }
+
+    const { productId } = req.params;
+
+    const alreadyReviewed = await Review.findOne({ productId, userId: user._id });
+    if (alreadyReviewed) {
+      return res.json({ canReview: false, reason: 'already_reviewed', review: alreadyReviewed });
+    }
+
+    const deliveredOrder = await Order.findOne({
+      customerId: user._id,
+      status: 'delivered',
+      'items.productId': productId
+    });
+
+    if (!deliveredOrder) {
+      return res.json({ canReview: false, reason: 'no_purchase' });
+    }
+
+    res.json({ canReview: true, orderId: deliveredOrder._id });
+  } catch (error) {
+    res.json({ canReview: false, reason: 'error' });
+  }
+});
+
+// ── MARK REVIEW AS HELPFUL ────────────────────────────────────────
+app.post('/api/reviews/:reviewId/helpful', async (req, res) => {
+  try {
+    const review = await Review.findByIdAndUpdate(
+      req.params.reviewId,
+      { $inc: { helpful: 1 } },
+      { new: true }
+    );
+    if (!review) return res.status(404).json({ message: 'Review not found' });
+    res.json({ helpful: review.helpful });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// ── UPDATED: GET PRODUCT WITH RATING ─────────────────────────────
+// Replace existing /api/products/:productId route with this version
+// (or add avgRating/reviewCount to Product schema and update the populate)
+app.get('/api/products/:productId', async (req, res) => {
+  try {
+    const product = await Product.findById(req.params.productId)
+      .populate('businessId', 'businessName name')
+      .lean();
+    if (!product) return res.status(404).json({ message: 'Product not found' });
+
+    // Fetch live rating
+    const ratingAgg = await Review.aggregate([
+      { $match: { productId: product._id } },
+      { $group: { _id: null, avg: { $avg: '$rating' }, count: { $sum: 1 } } }
+    ]);
+    const avgRating = ratingAgg[0]?.avg ? parseFloat(ratingAgg[0].avg.toFixed(1)) : 0;
+    const reviewCount = ratingAgg[0]?.count || 0;
+
+    res.json({
+      ...product,
+      shopName: product.businessId?.businessName || product.businessId?.name,
+      shopId: product.businessId?._id,
+      avgRating,
+      reviewCount
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// ── UPDATED: /api/featured — include ratings ──────────────────────
+// Upgrade the featured products to include ratings
+// In the existing /api/featured route, update formattedProducts mapping:
+/*
+  const productIds = activeProducts.map(p => p._id);
+  const ratingsAgg = await Review.aggregate([
+    { $match: { productId: { $in: productIds } } },
+    { $group: { _id: '$productId', avg: { $avg: '$rating' }, count: { $sum: 1 } } }
+  ]);
+  const ratingsMap = {};
+  ratingsAgg.forEach(r => { ratingsMap[r._id.toString()] = { avg: parseFloat(r.avg.toFixed(1)), count: r.count }; });
+
+  const formattedProducts = activeProducts.map(p => ({
+    id: p._id.toString(), name: p.name, description: p.description || '',
+    price: p.price, image: p.image || '...',
+    shopId: p.businessId._id.toString(), shopName: p.businessId.businessName || p.businessId.name,
+    stock: p.stock, category: p.category || '',
+    rating: ratingsMap[p._id.toString()]?.avg || 0,
+    reviewCount: ratingsMap[p._id.toString()]?.count || 0
+  }));
+*/
+
+
+// ── RATE PRODUCT FROM PROFILE (after delivery) ────────────────────
+// This is just the same POST /api/products/:productId/reviews route above
+// The profile page calls it with the orderId context
+
+// ── BUSINESS: Get reviews for business products ───────────────────
+app.get('/api/business/reviews', async (req, res) => {
+  try {
+    const token = req.headers.authorization?.split(' ')[1];
+    if (!token) return res.status(401).json({ message: 'No token' });
+    const decoded = jwt.verify(token, JWT_SECRET);
+    const business = await User.findById(decoded.userId);
+    if (!business || business.userType !== 'business') return res.status(403).json({ message: 'Access denied' });
+
+    const products = await Product.find({ businessId: business._id }).select('_id').lean();
+    const productIds = products.map(p => p._id);
+
+    const reviews = await Review.find({ productId: { $in: productIds } })
+      .populate('productId', 'name')
+      .sort({ createdAt: -1 })
+      .limit(50)
+      .lean();
+
+    res.json(reviews);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+
+
+// GET list of product IDs already reviewed by the current customer
+// Used by profile.html to show "Rated" vs "Rate" badge
+app.get('/api/customer/reviewed-products', async (req, res) => {
+  try {
+    const token = req.headers.authorization?.split(' ')[1];
+    if (!token) return res.status(401).json({ message: 'No token' });
+    const decoded = jwt.verify(token, JWT_SECRET);
+
+    const reviews = await Review.find({ userId: decoded.userId }).select('productId').lean();
+    const productIds = reviews.map(r => r.productId.toString());
+
+    res.json({ productIds });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+
+// ── ALSO UPDATE /api/featured to include ratings ──────────────────
+// Replace the existing /api/featured route with this version:
+
+app.get('/api/featured', async (req, res) => {
+  try {
+    const businessesWithProducts = await User.aggregate([
+      { $match: { userType: 'business', businessName: { $exists: true, $ne: null } } },
+      { $lookup: { from: 'products', localField: '_id', foreignField: 'businessId', as: 'products' } },
+      { $match: { 'products.0': { $exists: true } } },
+      { $project: {
+          name: '$businessName', ownerName: '$name', email: 1, phone: 1, address: 1, createdAt: 1,
+          productCount: { $size: '$products' }, rating: { $literal: 4.5 }
+      }},
+      { $sort: { createdAt: -1 } },
+      { $limit: 6 }
+    ]);
+
+    const activeProducts = await Product.find({ status: 'active', stock: { $gt: 0 } })
+      .populate('businessId', 'businessName name')
+      .sort({ createdAt: -1 }).limit(12).lean();
+
+    // Bulk-fetch ratings for all these products
+    const productIds = activeProducts.map(p => p._id);
+    const ratingsAgg = await Review.aggregate([
+      { $match: { productId: { $in: productIds } } },
+      { $group: { _id: '$productId', avg: { $avg: '$rating' }, count: { $sum: 1 } } }
+    ]);
+    const ratingsMap = {};
+    ratingsAgg.forEach(r => {
+      ratingsMap[r._id.toString()] = {
+        avg: parseFloat(r.avg.toFixed(1)),
+        count: r.count
+      };
+    });
+
+    const formattedProducts = activeProducts.map(p => ({
+      id: p._id.toString(),
+      name: p.name,
+      description: p.description || '',
+      price: p.price,
+      image: p.image || 'https://images.unsplash.com/photo-1608043152266-119cb09fc56e?w=400&fit=crop',
+      shopId: p.businessId._id.toString(),
+      shopName: p.businessId.businessName || p.businessId.name,
+      stock: p.stock,
+      category: p.category || '',
+      rating: ratingsMap[p._id.toString()]?.avg || 0,
+      reviewCount: ratingsMap[p._id.toString()]?.count || 0
+    }));
+
+    const formattedShops = businessesWithProducts.map(b => ({
+      id: b._id.toString(), name: b.name, ownerName: b.ownerName, email: b.email,
+      phone: b.phone, address: b.address, rating: b.rating,
+      memberSince: new Date(b.createdAt).toISOString().split('T')[0],
+      productCount: b.productCount
+    }));
+
+    res.json({ shops: formattedShops, products: formattedProducts });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to load featured content', shops: [], products: [] });
+  }
+});
+
 
 // ── DB ────────────────────────────────────────────────────────────────────────
 
@@ -522,6 +924,50 @@ app.get('/api/business/analytics', async (req, res) => {
   }
 });
 
+// ── BUSINESS NOTIFICATIONS ────────────────────────────────────────
+app.get('/api/business/notifications', async (req, res) => {
+  try {
+    const token = req.headers.authorization?.split(' ')[1];
+    if (!token) return res.status(401).json({ message: 'No token' });
+    const decoded = jwt.verify(token, JWT_SECRET);
+    const business = await User.findById(decoded.userId);
+    if (!business || business.userType !== 'business')
+      return res.status(403).json({ message: 'Access denied' });
+
+    const businessId = new mongoose.Types.ObjectId(decoded.userId);
+
+    // Cancelled orders in the last 7 days
+    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+    const cancelledOrders = await Order.find({
+      businessId,
+      status: 'cancelled',
+      updatedAt: { $gte: sevenDaysAgo }
+    })
+      .populate('customerId', 'name')
+      .sort({ updatedAt: -1 })
+      .lean();
+
+    // Pending orders
+    const pendingCount = await Order.countDocuments({ businessId, status: 'pending' });
+
+    // Low/out of stock
+    const lowStock  = await Product.countDocuments({ businessId, stock: { $gt: 0, $lt: 10 }, status: 'active' });
+    const outOfStock = await Product.countDocuments({ businessId, stock: 0 });
+
+    // Monthly revenue
+    const monthStart = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+    const revenueAgg = await Order.aggregate([
+      { $match: { businessId, status: 'delivered', createdAt: { $gte: monthStart } } },
+      { $group: { _id: null, total: { $sum: '$total' } } }
+    ]);
+    const monthlyRevenue = revenueAgg[0]?.total || 0;
+
+    res.json({ cancelledOrders, pendingCount, lowStock, outOfStock, monthlyRevenue });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
 // ── BUSINESS PRODUCTS ─────────────────────────────────────────────────────────
 
 app.get('/api/business/products', async (req, res) => {
@@ -729,26 +1175,6 @@ app.get('/api/business/shop/:shopId/products', async (req, res) => {
   }
 });
 
-app.get('/api/products/:productId', async (req, res) => {
-  try {
-    const product = await Product.findById(req.params.productId).populate('businessId', 'businessName name').lean();
-    if (!product) return res.status(404).json({ message: 'Product not found' });
-    res.json({ ...product, shopName: product.businessId.businessName || product.businessId.name, shopId: product.businessId._id });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-});
-
-app.get('/api/products/:productId/reviews', async (req, res) => {
-  res.json([
-    { userName: 'Maria S.', rating: 5, comment: 'Absolutely beautiful! Perfect souvenir!', createdAt: new Date(Date.now() - 86400000) },
-    { userName: 'John D.', rating: 4, comment: 'Great quality, fast shipping.', createdAt: new Date(Date.now() - 2 * 86400000) }
-  ]);
-});
-
-app.post('/api/products/:productId/reviews', async (req, res) => {
-  res.json({ message: 'Review added!' });
-});
 
 app.get('/api/products/:shopId/related', async (req, res) => {
   try {
@@ -778,6 +1204,126 @@ app.get('/api/customer/orders', async (req, res) => {
   }
 });
 
+app.put('/api/customer/orders/:id/cancel', async (req, res) => {
+  try {
+    const token = req.headers.authorization?.split(' ')[1];
+    if (!token) return res.status(401).json({ message: 'No token' });
+    const decoded = jwt.verify(token, JWT_SECRET);
+
+    const order = await Order.findOne({ 
+      _id: req.params.id, 
+      customerId: decoded.userId 
+    });
+    
+    if (!order) return res.status(404).json({ message: 'Order not found' });
+    if (order.status !== 'pending') return res.status(400).json({ message: 'Only pending orders can be cancelled' });
+
+    order.status = 'cancelled';
+    await order.save();
+
+    res.json({ message: 'Order cancelled successfully', order });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+//========================================================================
+//                 CUSTOMER ACCOUNT SECURITY SETTINGS
+//========================================================================
+// ── CHANGE PASSWORD ───────────────────────────────────────────────
+app.put('/api/customer/change-password', async (req, res) => {
+  try {
+    const token = req.headers.authorization?.split(' ')[1];
+    if (!token) return res.status(401).json({ message: 'No token' });
+    const decoded = jwt.verify(token, JWT_SECRET);
+    const user = await User.findById(decoded.userId);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    const { currentPassword, newPassword } = req.body;
+    if (!currentPassword || !newPassword)
+      return res.status(400).json({ message: 'Both fields are required' });
+    if (newPassword.length < 6)
+      return res.status(400).json({ message: 'New password must be at least 6 characters' });
+
+    const isMatch = await user.comparePassword(currentPassword);
+    if (!isMatch)
+      return res.status(400).json({ message: 'Current password is incorrect' });
+
+    user.password = newPassword; // pre-save hook will hash it
+    await user.save();
+
+    res.json({ message: 'Password changed successfully!' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// ── SEND EMAIL VERIFICATION CODE ──────────────────────────────────
+app.post('/api/customer/send-verification', async (req, res) => {
+  try {
+    const token = req.headers.authorization?.split(' ')[1];
+    if (!token) return res.status(401).json({ message: 'No token' });
+    const decoded = jwt.verify(token, JWT_SECRET);
+    const user = await User.findById(decoded.userId);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+    if (user.emailVerified)
+      return res.status(400).json({ message: 'Email is already verified' });
+
+    // Generate 6-digit code, expires in 10 minutes
+    const code = Math.floor(100000 + Math.random() * 900000).toString();
+    const expiry = new Date(Date.now() + 10 * 60 * 1000);
+
+    user.verificationCode = code;
+    user.verificationExpiry = expiry;
+    await user.save();
+
+    // In production, send via nodemailer/sendgrid
+    // For now, return code in response (remove in production)
+    console.log(`Verification code for ${user.email}: ${code}`);
+
+    res.json({ 
+      message: 'Verification code sent to your email!',
+      // Remove this in production:
+      devCode: process.env.NODE_ENV !== 'production' ? code : undefined
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// ── VERIFY EMAIL CODE ─────────────────────────────────────────────
+app.post('/api/customer/verify-email', async (req, res) => {
+  try {
+    const token = req.headers.authorization?.split(' ')[1];
+    if (!token) return res.status(401).json({ message: 'No token' });
+    const decoded = jwt.verify(token, JWT_SECRET);
+    const user = await User.findById(decoded.userId);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+    if (user.emailVerified)
+      return res.status(400).json({ message: 'Email already verified' });
+
+    const { code } = req.body;
+    if (!code) return res.status(400).json({ message: 'Code is required' });
+
+    if (!user.verificationCode || !user.verificationExpiry)
+      return res.status(400).json({ message: 'No verification code found. Please request a new one.' });
+
+    if (new Date() > user.verificationExpiry)
+      return res.status(400).json({ message: 'Code has expired. Please request a new one.' });
+
+    if (user.verificationCode !== code.trim())
+      return res.status(400).json({ message: 'Incorrect code. Please try again.' });
+
+    user.emailVerified = true;
+    user.verificationCode = undefined;
+    user.verificationExpiry = undefined;
+    await user.save();
+
+    res.json({ message: 'Email verified successfully!' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
 // ── CHECKOUT ──────────────────────────────────────────────────────────────────
 
 app.post('/api/checkout', async (req, res) => {
@@ -814,6 +1360,7 @@ app.post('/api/checkout', async (req, res) => {
         total: parseFloat((shopTotal + shopTax).toFixed(2)),
         status: 'pending',
         shippingAddress,
+        orderNumber,
         trackingNumber: JSON.stringify({ paymentMethod, phone, email, notes, orderNumber })
       });
       await order.save();
