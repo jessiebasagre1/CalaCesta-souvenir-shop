@@ -84,8 +84,43 @@ function showToast(msg) {
   t._timer = setTimeout(() => { t.style.opacity='0'; t.style.transform='translateY(16px)'; }, 3000);
 }
 
+/* ── STORE SETTINGS CACHE ── */
+// Keyed by shopId → { taxRate, discount, shippingFee }
+const _settingsCache = {};
+
+async function getShopSettings(shopId) {
+  if (!shopId || shopId === 'Featured Shop') return { taxRate: 0, discount: 0, shippingFee: 0 };
+  if (_settingsCache[shopId]) return _settingsCache[shopId];
+  try {
+    const res = await fetch(`/api/store-settings?shopId=${shopId}`);
+    if (!res.ok) throw new Error();
+    const data = await res.json();
+    _settingsCache[shopId] = {
+      taxRate:     parseFloat(data.taxRate)     || 0,
+      discount:    parseFloat(data.discount)    || 0,
+      shippingFee: parseFloat(data.shippingFee) || 0,
+    };
+  } catch {
+    _settingsCache[shopId] = { taxRate: 0, discount: 0, shippingFee: 0 };
+  }
+  return _settingsCache[shopId];
+}
+
+/**
+ * Apply discount + tax to a single product price.
+ * Shipping is per-order so it is NOT added to individual product cards.
+ * Order: discount first → tax on discounted price.
+ */
+function applyPricing(basePrice, settings) {
+  const discountAmt   = basePrice * (settings.discount / 100);
+  const afterDiscount = basePrice - discountAmt;
+  const taxAmt        = afterDiscount * (settings.taxRate / 100);
+  const finalPrice    = afterDiscount + taxAmt;
+  return { finalPrice, discountAmt, afterDiscount, taxAmt };
+}
+
 /* ── RENDER PRODUCT CARD (with clickable link to product.html) ── */
-function renderProductCard(product, badgeType = 'none') {
+function renderProductCard(product, badgeType = 'none', settings = null) {
   const badges = {
     hot:  `<div class="badge badge-hot"><i class="fas fa-fire"></i> Hot</div>`,
     top:  `<div class="badge badge-top"><i class="fas fa-trophy"></i> Top</div>`,
@@ -95,8 +130,6 @@ function renderProductCard(product, badgeType = 'none') {
   };
   const stockHtml = product.stock <= 5 && product.stock > 0
     ? `<div class="stock-low"><i class="fas fa-exclamation-circle"></i>Only ${product.stock} left!</div>` : '';
-  const oldPrice = badgeType === 'sale'
-    ? `<span class="product-price-old">₱${(product.price * 1.2).toFixed(0)}</span>` : '';
   const outOfStock = product.stock === 0
     ? `<div class="out-of-stock-overlay"><span>OUT OF STOCK</span></div>` : '';
   const cartBtn = product.stock > 0
@@ -112,6 +145,23 @@ function renderProductCard(product, badgeType = 'none') {
   const ratingLabel = avg > 0 ? `${avg.toFixed(1)} (${count})` : count > 0 ? `(${count})` : '';
 
   const pid = product.id || product._id;
+
+  // ── Price display with store settings applied ──
+  let priceHtml;
+  if (settings && (settings.discount > 0 || settings.taxRate > 0)) {
+    const { finalPrice, discountAmt } = applyPricing(product.price, settings);
+    priceHtml = `<span class="product-price">₱${finalPrice.toFixed(2)}</span>`;
+    if (discountAmt > 0) {
+      priceHtml += `
+        <span class="product-price-old" style="text-decoration:line-through;font-size:.8em;color:#aaa;margin-left:3px;">₱${product.price.toFixed(2)}</span>
+        <span style="font-size:.72em;background:#dcfce7;color:#166534;border-radius:4px;padding:1px 5px;margin-left:3px;">-${settings.discount}%</span>`;
+    }
+  } else {
+    // No settings — fall back to original behaviour
+    const oldPrice = badgeType === 'sale'
+      ? `<span class="product-price-old">₱${(product.price * 1.2).toFixed(0)}</span>` : '';
+    priceHtml = `<span class="product-price">₱${product.price.toFixed(2)}</span>${oldPrice}`;
+  }
 
   return `
     <div class="product-card" style="cursor:pointer" onclick="window.location.href='product.html?id=${pid}'">
@@ -129,10 +179,7 @@ function renderProductCard(product, badgeType = 'none') {
         </div>
         ${stockHtml}
         <div class="product-footer">
-          <div>
-            <span class="product-price">₱${product.price.toFixed(2)}</span>
-            ${oldPrice}
-          </div>
+          <div>${priceHtml}</div>
           ${cartBtn}
         </div>
       </div>
@@ -151,9 +198,16 @@ async function loadFeaturedContent() {
   try {
     const res = await fetch('/api/featured');
     const data = await res.json();
-    renderFeaturedProducts(data.products || []);
-    renderHotProducts(data.products || []);
-    renderShops(data.shops || []);
+    const products = data.products || [];
+    const shops    = data.shops    || [];
+
+    // Pre-fetch all unique shop settings in parallel before rendering
+    const shopIds = [...new Set(products.map(p => p.shopId).filter(Boolean))];
+    await Promise.all(shopIds.map(id => getShopSettings(id)));
+
+    renderFeaturedProducts(products);
+    renderHotProducts(products);
+    renderShops(shops);
   } catch {
     renderFeaturedProducts([]);
     renderHotProducts([]);
@@ -168,7 +222,10 @@ function renderFeaturedProducts(products) {
     return;
   }
   const badges = ['top','new','none','sale','none','none'];
-  el.innerHTML = products.slice(0,6).map((p,i) => renderProductCard(p, badges[i % badges.length])).join('');
+  el.innerHTML = products.slice(0,6).map((p,i) => {
+    const settings = _settingsCache[p.shopId] || null;
+    return renderProductCard(p, badges[i % badges.length], settings);
+  }).join('');
 }
 
 function renderHotProducts(products) {
@@ -178,7 +235,10 @@ function renderHotProducts(products) {
     return;
   }
   const shuffled = [...products].sort(() => Math.random() - .5);
-  el.innerHTML = shuffled.slice(0,4).map(p => renderProductCard(p, 'hot')).join('');
+  el.innerHTML = shuffled.slice(0,4).map(p => {
+    const settings = _settingsCache[p.shopId] || null;
+    return renderProductCard(p, 'hot', settings);
+  }).join('');
 }
 
 function renderShops(shops) {
@@ -235,13 +295,16 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
       const el = document.getElementById('featuredProducts');
       if (!products.length) return;
       const badgeMap = {
-        featured:['top','new','none','sale'],
-        'top-selling':['top','top','top','top'],
+        featured:      ['top','new','none','sale'],
+        'top-selling': ['top','top','top','top'],
         'new-arrivals':['new','new','new','new'],
-        sale:['sale','sale','sale','sale']
+        sale:          ['sale','sale','sale','sale']
       };
       const badges = badgeMap[tab] || ['none'];
-      el.innerHTML = products.slice(0,6).map((p,i) => renderProductCard(p, badges[i % badges.length])).join('');
+      el.innerHTML = products.slice(0,6).map((p,i) => {
+        const settings = _settingsCache[p.shopId] || null;
+        return renderProductCard(p, badges[i % badges.length], settings);
+      }).join('');
     }).catch(() => {});
   });
 });

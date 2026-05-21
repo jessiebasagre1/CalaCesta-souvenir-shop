@@ -338,12 +338,12 @@
     <button class="nav-item" onclick="showSection('profile', this)">
       <i class="fas fa-user-edit"></i><span>Profile</span>
     </button>
+    <button class="nav-item" onclick="showSection('storeSettings', this)">
+      <i class="fas fa-sliders-h"></i><span>Store Settings</span>
+    </button>
   </nav>
   <div class="sidebar-bottom">
-    <div class="shop-badge">
-      <div class="shop-badge-name" id="sidebarShopName"></div>
-      <div class="shop-badge-email" id="sidebarEmail"></div>
-    </div>
+    
     <button class="btn-logout" onclick="logout()">
       <i class="fas fa-sign-out-alt"></i><span>Log out</span>
     </button>
@@ -352,17 +352,7 @@
 
 <!-- ═══ MAIN ═══ -->
 <main class="main">
-  <header>
-    <div class="nav-container">
-      <a href="index.html" class="logo"><i class="fas fa-gift"></i> Cala-Cesta</a>
-      <nav class="nav-links">
-        <a href="index.html"><i class="fas fa-home"></i> Home</a>
-      </nav>
-      <div class="nav-right">
-        <div class="auth-section" id="authSection"></div>
-      </div>
-    </div>
-  </header>
+  
 
   <div class="topbar">
     <div class="page-title" id="pageTitle">Overview</div>
@@ -697,6 +687,133 @@
   </div><!-- /content -->
 </main>
 
+
+<!-- ═══ STORE SETTINGS SECTION ═══ -->
+
+<div id="storeSettings-section" class="section">
+  <div class="ss-grid">
+ 
+    <!-- ── LEFT: Pricing Rules form ── -->
+    <div class="ss-card">
+      <div class="ss-card-head">
+        <i class="fas fa-sliders-h"></i>
+        <div class="ss-card-title">Pricing Rules</div>
+      </div>
+      <div class="ss-card-body">
+ 
+        <div class="ss-field">
+          <label class="ss-label">Tax Rate</label>
+          <div class="ss-input-wrap">
+            <span class="ss-suffix">%</span>
+            <input class="ss-input no-prefix"
+                   style="padding-right:36px;"
+                   type="number" id="ssaTaxRate"
+                   min="0" max="100" step="0.01"
+                   placeholder="12"
+                   oninput="ssUpdatePreview()">
+          </div>
+          <div class="ss-tip">Applied on the discounted subtotal. Common: 12% VAT in the Philippines.</div>
+        </div>
+ 
+        <div class="ss-field">
+          <label class="ss-label">Store-wide Discount</label>
+          <div class="ss-input-wrap">
+            <span class="ss-suffix">%</span>
+            <input class="ss-input no-prefix"
+                   style="padding-right:36px;"
+                   type="number" id="ssaDiscount"
+                   min="0" max="100" step="0.01"
+                   placeholder="0"
+                   oninput="ssUpdatePreview()">
+          </div>
+          <div class="ss-tip">Applied to the subtotal before tax. Set 0 to disable.</div>
+        </div>
+ 
+        <div class="ss-field">
+          <label class="ss-label">Shipping Fee</label>
+          <div class="ss-input-wrap">
+            <span class="ss-prefix">&#8369;</span>
+            <input class="ss-input"
+                   type="number" id="ssaShippingFee"
+                   min="0" step="0.01"
+                   placeholder="50"
+                   oninput="ssUpdatePreview()">
+          </div>
+          <div class="ss-tip">Flat shipping fee added to every order. Set 0 for free shipping.</div>
+        </div>
+ 
+        <button class="ss-save-btn" onclick="ssaSaveSettings()">
+          <i class="fas fa-save"></i> Save Settings
+        </button>
+ 
+      </div>
+    </div>
+ 
+    <!-- ── RIGHT: two cards stacked ── -->
+    <div class="ss-right-col">
+ 
+      <!-- Live Order Preview -->
+      <div class="ss-card">
+        <div class="ss-card-head">
+          <i class="fas fa-receipt"></i>
+          <div class="ss-card-title">Live Order Preview</div>
+        </div>
+        <div class="ss-card-body">
+          <div class="ss-sample-hint">
+            Based on a sample &#8369;500 order — shows how your settings affect what customers pay.
+          </div>
+          <div class="ss-preview">
+            <div class="ss-preview-title">
+              <i class="fas fa-file-invoice"></i> Order Breakdown
+            </div>
+            <div class="ss-preview-row subtotal">
+              <span>Subtotal</span>
+              <span id="ssPreviewSub">&#8369;500.00</span>
+            </div>
+            <div class="ss-preview-row discount">
+              <span id="ssPreviewDiscountLabel">Discount (0%)</span>
+              <span id="ssPreviewDiscount">- &#8369;0.00</span>
+            </div>
+            <div class="ss-preview-row">
+              <span id="ssPreviewTaxLabel">Tax (12%)</span>
+              <span id="ssPreviewTax">&#8369;60.00</span>
+            </div>
+            <div class="ss-preview-row">
+              <span>Shipping Fee</span>
+              <span id="ssPreviewShipping">&#8369;50.00</span>
+            </div>
+            <div class="ss-preview-row total">
+              <span>Total</span>
+              <span id="ssPreviewTotal">&#8369;610.00</span>
+            </div>
+          </div>
+        </div>
+      </div>
+ 
+      <!-- How It Works -->
+      <div class="ss-card">
+        <div class="ss-card-head">
+          <i class="fas fa-info-circle"></i>
+          <div class="ss-card-title">How It Works</div>
+        </div>
+        <div class="ss-card-body">
+          <div class="ss-how-body">
+            <p>These settings are saved to your store and applied automatically when customers check out from your shop.</p>
+            <p><strong>Calculation order:</strong></p>
+            <ol>
+              <li>Subtotal = sum of item prices &times; quantities</li>
+              <li>Discount applied to subtotal</li>
+              <li>Tax applied to discounted subtotal</li>
+              <li>Shipping fee added last</li>
+            </ol>
+          </div>
+        </div>
+      </div>
+ 
+    </div><!-- /.ss-right-col -->
+  </div><!-- /.ss-grid -->
+</div>
+
 <!-- ═══ ADD PRODUCT OVERLAY ═══ -->
 <div class="form-overlay" id="addProductOverlay" onclick="handleOverlayClick(event)">
   <div class="form-panel" onclick="event.stopPropagation()" style="max-width:560px">
@@ -888,19 +1005,25 @@
 
   const pageTitles = {
     overview: 'Overview', products: 'Products', orders: 'Orders',
-    analytics: 'Analytics', inventory: 'Inventory', profile: 'Profile'
+    analytics: 'Analytics', inventory: 'Inventory', profile: 'Profile',
+    storeSettings: 'Store Settings'
   };
 
   /* ─── SECTION NAV ─────────────────────────────────────── */
-  function showSection(name, btn) {
-    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-    document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
-    document.getElementById(name + '-section').classList.add('active');
-    if (btn) btn.classList.add('active');
-    document.getElementById('pageTitle').textContent = pageTitles[name] || name;
-    if (name === 'analytics') setTimeout(renderAnalytics, 50);
-    if (name === 'inventory') renderInventoryTable();
-  }
+ function showSection(name, btn) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+  document.getElementById(name + '-section').classList.add('active');
+  if (btn) btn.classList.add('active');
+  document.getElementById('pageTitle').textContent = pageTitles[name] || name;
+  if (name === 'analytics') setTimeout(renderAnalytics, 50);
+  if (name === 'inventory') renderInventoryTable();
+  if (name === 'storeSettings') ssaLoadSettings();
+
+  // Hide topbar actions on Store Settings, show on all others
+  const topbarActions = document.querySelector('.topbar-actions');
+  topbarActions.style.display = name === 'storeSettings' ? 'none' : 'flex';
+}
 
   /* ─── BOOT ────────────────────────────────────────────── */
   window.addEventListener('load', async () => {
@@ -922,8 +1045,7 @@
       if (!res.ok) throw new Error();
       currentUser = await res.json();
 
-      document.getElementById('sidebarShopName').textContent = currentUser.businessName || 'Your Shop';
-      document.getElementById('sidebarEmail').textContent = currentUser.email;
+     
       document.getElementById('shopInfo').innerHTML = `
         <div style="display:grid;grid-template-columns:120px 1fr;gap:6px 12px;font-size:14px;">
           <span style="color:var(--ink-muted);">Business</span><span style="font-weight:500;">${currentUser.businessName || '—'}</span>
@@ -1855,7 +1977,7 @@ async function handleEpPrimaryUpload(event) {
       });
       if (res.ok) {
         currentUser = { ...currentUser, ...update };
-        document.getElementById('sidebarShopName').textContent = currentUser.businessName || 'Your Shop';
+
         showToast('Profile updated!', 'success');
       } else {
         showToast('Failed to update profile', 'error');
@@ -2061,6 +2183,75 @@ async function bVerifyEmailCode() {
     showToast('Network error — please try again', 'error');
   }
 }
+  
+  /* ─── STORE SETTINGS ──────────────────────────────────── */
+
+  /** Load settings from backend and populate inputs */
+  async function ssaLoadSettings() {
+    try {
+      const res = await fetch('/api/store-settings', {
+        headers: { Authorization: 'Bearer ' + token }
+      });
+      if (!res.ok) return;
+      const data = await res.json();
+      document.getElementById('ssaTaxRate').value    = data.taxRate    ?? 12;
+      document.getElementById('ssaDiscount').value   = data.discount   ?? 0;
+      document.getElementById('ssaShippingFee').value = data.shippingFee ?? 50;
+      ssUpdatePreview();
+    } catch (e) {
+      console.warn('Store settings load failed', e);
+    }
+  }
+
+  /** Save settings to backend */
+  async function ssaSaveSettings() {
+    const taxRate     = parseFloat(document.getElementById('ssaTaxRate').value)    || 0;
+    const discount    = parseFloat(document.getElementById('ssaDiscount').value)   || 0;
+    const shippingFee = parseFloat(document.getElementById('ssaShippingFee').value)|| 0;
+
+    if (taxRate < 0 || taxRate > 100)     { showToast('Tax rate must be 0–100%', 'error'); return; }
+    if (discount < 0 || discount > 100)   { showToast('Discount must be 0–100%', 'error'); return; }
+    if (shippingFee < 0)                  { showToast('Shipping fee must be 0 or more', 'error'); return; }
+
+    try {
+      const res = await fetch('/api/store-settings', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+        body: JSON.stringify({ taxRate, discount, shippingFee })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        showToast('Store settings saved!');
+      } else {
+        showToast(data.message || 'Failed to save settings', 'error');
+      }
+    } catch (e) {
+      showToast('Network error — please try again', 'error');
+    }
+  }
+
+  /** Live preview recalculation (sample subtotal = ₱500) */
+  function ssUpdatePreview() {
+    const SAMPLE = 500;
+    const taxRate     = parseFloat(document.getElementById('ssaTaxRate').value)    || 0;
+    const discount    = parseFloat(document.getElementById('ssaDiscount').value)   || 0;
+    const shippingFee = parseFloat(document.getElementById('ssaShippingFee').value)|| 0;
+
+    const discountAmt   = SAMPLE * (discount / 100);
+    const afterDiscount = SAMPLE - discountAmt;
+    const taxAmt        = afterDiscount * (taxRate / 100);
+    const total         = afterDiscount + taxAmt + shippingFee;
+
+    const fmt = v => '\u20b1' + v.toFixed(2);
+    document.getElementById('ssPreviewSub').textContent            = fmt(SAMPLE);
+    document.getElementById('ssPreviewDiscountLabel').textContent  = 'Discount (' + discount + '%)';
+    document.getElementById('ssPreviewDiscount').textContent       = '- ' + fmt(discountAmt);
+    document.getElementById('ssPreviewTaxLabel').textContent       = 'Tax (' + taxRate + '%)';
+    document.getElementById('ssPreviewTax').textContent            = fmt(taxAmt);
+    document.getElementById('ssPreviewShipping').textContent       = fmt(shippingFee);
+    document.getElementById('ssPreviewTotal').textContent          = fmt(total);
+  }
+
   /* ─── LOGOUT ──────────────────────────────────────────── */
   function logout() { localStorage.clear(); window.location.href = 'index.html'; }
 </script>

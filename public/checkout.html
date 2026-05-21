@@ -183,17 +183,22 @@
 
     <hr class="divider">
 
+    <!-- Pricing breakdown — all rows driven by store settings -->
     <div class="total-row">
       <span>Subtotal</span>
       <span id="summarySubtotal">—</span>
     </div>
-    <div class="total-row">
-      <span>Shipping</span>
-      <span style="color: #28a745; font-weight:700;">FREE</span>
+    <div class="total-row" id="discountRow" style="display:none;">
+      <span id="discountLabel" style="color:#16a34a;">Discount</span>
+      <span id="summaryDiscount" style="color:#16a34a; font-weight:700;">—</span>
     </div>
     <div class="total-row">
-      <span>Tax (12% VAT)</span>
+      <span id="taxLabel">Tax</span>
       <span id="summaryTax">—</span>
+    </div>
+    <div class="total-row">
+      <span>Shipping</span>
+      <span id="summaryShipping">—</span>
     </div>
     <hr class="divider">
     <div class="total-row grand">
@@ -219,15 +224,69 @@
 <script>
   let cartData = null;
 
+  // Store settings — defaults match common PH setup
+  let storeSettings = {
+    taxRate: 12,
+    discount: 0,
+    shippingFee: 50
+  };
+
+  // Calculated totals (set by renderSummary, read by placeOrder)
+  let pricingTotals = {
+    subtotal: 0,
+    discountAmt: 0,
+    afterDiscount: 0,
+    taxAmt: 0,
+    shippingFee: 0,
+    grandTotal: 0
+  };
+
   window.addEventListener('load', async () => {
     const token = localStorage.getItem('token');
     if (!token) { window.location.href = 'login.html'; return; }
 
+    // Load store settings first, then cart (so summary shows correct prices)
+    await loadStoreSettings();
     await loadCartSummary();
     prefillUserInfo();
     setupPaymentToggle();
     setupCardFormatting();
   });
+
+  /* ── Load store settings from whichever shop owns the cart items ── */
+  async function loadStoreSettings() {
+    try {
+      const token = localStorage.getItem('token');
+
+      // First peek at the cart to find the businessId
+      const cartRes = await fetch('/api/cart', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (!cartRes.ok) return;
+      const cart = await cartRes.json();
+
+      // Get businessId from first item
+      const businessId = cart.items?.[0]?.product?.shopId
+                      || cart.items?.[0]?.product?.businessId;
+
+      if (!businessId) return;
+
+      // Fetch that shop's settings
+      const res = await fetch(`/api/store-settings?shopId=${businessId}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (!res.ok) return;
+      const data = await res.json();
+
+      storeSettings = {
+        taxRate:     parseFloat(data.taxRate)     || 0,
+        discount:    parseFloat(data.discount)    || 0,
+        shippingFee: parseFloat(data.shippingFee) || 0
+      };
+    } catch (e) {
+      console.warn('Could not load store settings, using defaults:', e);
+    }
+  }
 
   async function loadCartSummary() {
     try {
@@ -249,6 +308,8 @@
       window.location.href = 'cart.html';
       return;
     }
+
+    // Items list
     const list = document.getElementById('orderItemsList');
     list.innerHTML = cart.items.map(item => `
       <div class="order-item">
@@ -264,13 +325,47 @@
       </div>
     `).join('');
 
-    const subtotal = cart.total;
-    const tax = subtotal * 0.12;
-    const total = subtotal + tax;
+    // ── Apply store settings: discount → tax → shipping ──
+    const subtotal      = cart.total;
+    const discountAmt   = subtotal * (storeSettings.discount / 100);
+    const afterDiscount = subtotal - discountAmt;
+    const taxAmt        = afterDiscount * (storeSettings.taxRate / 100);
+    const shippingFee   = storeSettings.shippingFee;
+    const grandTotal    = afterDiscount + taxAmt + shippingFee;
 
+    // Save for placeOrder()
+    pricingTotals = { subtotal, discountAmt, afterDiscount, taxAmt, shippingFee, grandTotal };
+
+    // Update UI
     document.getElementById('summarySubtotal').textContent = `₱${subtotal.toFixed(2)}`;
-    document.getElementById('summaryTax').textContent = `₱${tax.toFixed(2)}`;
-    document.getElementById('summaryTotal').textContent = `₱${total.toFixed(2)}`;
+
+    // Discount row — only show if discount > 0
+    if (storeSettings.discount > 0) {
+      document.getElementById('discountRow').style.display = '';
+      document.getElementById('discountLabel').textContent = `Discount (${storeSettings.discount}%)`;
+      document.getElementById('summaryDiscount').textContent = `- ₱${discountAmt.toFixed(2)}`;
+    } else {
+      document.getElementById('discountRow').style.display = 'none';
+    }
+
+    // Tax row
+    document.getElementById('taxLabel').textContent =
+      storeSettings.taxRate > 0 ? `Tax (${storeSettings.taxRate}% VAT)` : 'Tax';
+    document.getElementById('summaryTax').textContent =
+      storeSettings.taxRate > 0 ? `₱${taxAmt.toFixed(2)}` : '₱0.00';
+
+    // Shipping row
+    document.getElementById('summaryShipping').textContent =
+      shippingFee > 0
+        ? `₱${shippingFee.toFixed(2)}`
+        : `<span style="color:#28a745;font-weight:700;">FREE</span>`;
+    // innerHTML for the shipping cell so FREE renders in green
+    document.getElementById('summaryShipping').innerHTML =
+      shippingFee > 0
+        ? `₱${shippingFee.toFixed(2)}`
+        : `<span style="color:#28a745;font-weight:700;">FREE</span>`;
+
+    document.getElementById('summaryTotal').textContent = `₱${grandTotal.toFixed(2)}`;
   }
 
   async function prefillUserInfo() {
@@ -282,30 +377,29 @@
       if (!res.ok) return;
       const user = await res.json();
 
-      // Split name
       const parts = (user.name || '').split(' ');
       document.getElementById('firstName').value = parts[0] || '';
-      document.getElementById('lastName').value = parts.slice(1).join(' ') || '';
-      document.getElementById('email').value = user.email || '';
-      document.getElementById('phone').value = user.phone || '';
-      document.getElementById('address').value = user.address || '';
+      document.getElementById('lastName').value  = parts.slice(1).join(' ') || '';
+      document.getElementById('email').value     = user.email || '';
+      document.getElementById('phone').value     = user.phone || '';
+      document.getElementById('address').value   = user.address || '';
     } catch {}
   }
 
   function setupPaymentToggle() {
-    const radios = document.querySelectorAll('input[name="payment"]');
-    const codInfo = document.getElementById('codInfo');
+    const radios    = document.querySelectorAll('input[name="payment"]');
+    const codInfo   = document.getElementById('codInfo');
     const gcashInfo = document.getElementById('gcashInfo');
-    const cardFields = document.getElementById('cardFields');
+    const cardFields= document.getElementById('cardFields');
 
     radios.forEach(r => r.addEventListener('change', () => {
-      codInfo.style.display = 'none';
+      codInfo.style.display   = 'none';
       gcashInfo.style.display = 'none';
       cardFields.classList.remove('visible');
 
-      if (r.value === 'cod') codInfo.style.display = 'flex';
+      if (r.value === 'cod')   codInfo.style.display   = 'flex';
       else if (r.value === 'gcash') gcashInfo.style.display = 'flex';
-      else if (r.value === 'card') cardFields.classList.add('visible');
+      else if (r.value === 'card')  cardFields.classList.add('visible');
     }));
   }
 
@@ -341,7 +435,6 @@
   async function placeOrder() {
     hideAlert();
 
-    // Validate
     const firstName = document.getElementById('firstName').value.trim();
     const lastName  = document.getElementById('lastName').value.trim();
     const email     = document.getElementById('email').value.trim();
@@ -351,7 +444,7 @@
     if (!firstName || !lastName) return showAlert('Please enter your full name.');
     if (!email || !email.includes('@')) return showAlert('Please enter a valid email address.');
     if (!address) return showAlert('Please enter your shipping address.');
-    if (!city) return showAlert('Please enter your city.');
+    if (!city)    return showAlert('Please enter your city.');
 
     const paymentMethod = document.querySelector('input[name="payment"]:checked').value;
 
@@ -359,38 +452,27 @@
       const cn = document.getElementById('cardNumber').value.replace(/\s/g,'');
       const ce = document.getElementById('cardExpiry').value;
       const cv = document.getElementById('cardCvv').value;
-      if (cn.length < 16) return showAlert('Please enter a valid card number.');
+      if (cn.length < 16)     return showAlert('Please enter a valid card number.');
       if (!ce.includes('/'))  return showAlert('Please enter a valid expiry date.');
-      if (cv.length < 3)  return showAlert('Please enter a valid CVV.');
+      if (cv.length < 3)      return showAlert('Please enter a valid CVV.');
     }
 
-    // Loading state
-    const btn = document.getElementById('placeOrderBtn');
+    const btn     = document.getElementById('placeOrderBtn');
     const spinner = document.getElementById('spinner');
-    const lockIcon = document.getElementById('lockIcon');
+    const lockIcon= document.getElementById('lockIcon');
     const btnText = document.getElementById('btnText');
-    btn.disabled = true;
-    spinner.style.display = 'block';
+    btn.disabled  = true;
+    spinner.style.display  = 'block';
     lockIcon.style.display = 'none';
-    btnText.textContent = 'Processing Order...';
+    btnText.textContent    = 'Processing Order...';
 
     try {
       const token = localStorage.getItem('token');
       const shippingAddress = `${firstName} ${lastName}, ${address}, ${city}, ${document.getElementById('province').value}, ${document.getElementById('zip').value}, ${document.getElementById('country').value}`;
 
-      const subtotal = cartData.total;
-      const tax = subtotal * 0.12;
-      const grandTotal = subtotal + tax;
+      // Use the pre-calculated totals from store settings
+      const { subtotal, discountAmt, taxAmt, shippingFee, grandTotal } = pricingTotals;
 
-      // Group items by shop/business
-      const shopGroups = {};
-      for (const item of cartData.items) {
-        const bid = item.product.shopId || 'unknown';
-        if (!shopGroups[bid]) shopGroups[bid] = [];
-        shopGroups[bid].push(item);
-      }
-
-      // Place one order per business (or single order for all)
       const res = await fetch('/api/checkout', {
         method: 'POST',
         headers: {
@@ -399,33 +481,33 @@
         },
         body: JSON.stringify({
           shippingAddress,
-          phone: document.getElementById('phone').value,
+          phone:         document.getElementById('phone').value,
           email,
           paymentMethod,
-          notes: document.getElementById('notes').value,
-          items: cartData.items,
-          subtotal,
-          tax: tax.toFixed(2),
-          total: grandTotal.toFixed(2)
+          notes:         document.getElementById('notes').value,
+          items:         cartData.items,
+          subtotal:      subtotal.toFixed(2),
+          discount:      discountAmt.toFixed(2),
+          discountRate:  storeSettings.discount,
+          tax:           taxAmt.toFixed(2),
+          taxRate:       storeSettings.taxRate,
+          shippingFee:   shippingFee.toFixed(2),
+          total:         grandTotal.toFixed(2)
         })
       });
 
       const data = await res.json();
-
       if (!res.ok) throw new Error(data.message || 'Order failed');
 
-      // Show success
-     document.getElementById('orderNumberDisplay').textContent =
-    `Order #${data.orderNumber}`;
-
+      document.getElementById('orderNumberDisplay').textContent = `Order #${data.orderNumber}`;
       document.getElementById('successOverlay').classList.add('show');
 
     } catch (err) {
       showAlert(err.message || 'Failed to place order. Please try again.');
-      btn.disabled = false;
-      spinner.style.display = 'none';
+      btn.disabled           = false;
+      spinner.style.display  = 'none';
       lockIcon.style.display = 'inline';
-      btnText.textContent = 'Place Order Securely';
+      btnText.textContent    = 'Place Order Securely';
     }
   }
 </script>

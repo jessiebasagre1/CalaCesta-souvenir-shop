@@ -14,6 +14,12 @@ const userSchema = new mongoose.Schema({
   emailVerified:      { type: Boolean, default: false },
   verificationCode:   String,
   verificationExpiry: Date,
+  // Store pricing settings (business accounts only)
+  storeSettings: {
+    taxRate:     { type: Number, default: 12 },
+    discount:    { type: Number, default: 0  },
+    shippingFee: { type: Number, default: 50 },
+  },
 }, { timestamps: true });
 
 userSchema.pre('save', async function (next) {

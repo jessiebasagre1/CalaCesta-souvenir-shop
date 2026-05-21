@@ -1,19 +1,20 @@
 require('dotenv').config();
 
 const express = require('express');
-const path = require('path');
-const cors = require('cors');
+const path    = require('path');
+const cors    = require('cors');
 
 const connectDB = require('./config/db');
 
-const authRoutes     = require('./routes/auth');
-const productRoutes  = require('./routes/products');
-const reviewRoutes   = require('./routes/reviews');
-const cartRoutes     = require('./routes/cart');
-const customerRoutes = require('./routes/customer');
-const businessRoutes = require('./routes/business');
-const shopRoutes     = require('./routes/shop');
-const uploadRoutes   = require('./routes/upload');
+const authRoutes          = require('./routes/auth');
+const productRoutes       = require('./routes/products');
+const reviewRoutes        = require('./routes/reviews');
+const cartRoutes          = require('./routes/cart');
+const customerRoutes      = require('./routes/customer');
+const businessRoutes      = require('./routes/business');
+const shopRoutes          = require('./routes/shop');
+const uploadRoutes        = require('./routes/upload');
+const storeSettingsRoutes = require('./routes/storeSettings'); // ← ADDED
 
 const app  = express();
 const PORT = process.env.PORT || 3000;
@@ -25,14 +26,15 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, '../public')));
 
 // ── Routes ────────────────────────────────────────────────────────────────────
-app.use('/api/auth',     authRoutes);
-app.use('/api/products', productRoutes);
-app.use('/api/reviews',  reviewRoutes);
-app.use('/api/cart',     cartRoutes);
-app.use('/api/customer', customerRoutes);
-app.use('/api/business', businessRoutes);
-app.use('/api/upload',   uploadRoutes);
-app.use('/api',          shopRoutes);   // /api/featured + /api/checkout
+app.use('/api/auth',           authRoutes);
+app.use('/api/products',       productRoutes);
+app.use('/api/reviews',        reviewRoutes);
+app.use('/api/cart',           cartRoutes);
+app.use('/api/customer',       customerRoutes);
+app.use('/api/business',       businessRoutes);
+app.use('/api/upload',         uploadRoutes);
+app.use('/api/store-settings', storeSettingsRoutes); // ← ADDED (must be before /api catch-all)
+app.use('/api',                shopRoutes);          // /api/featured + /api/checkout — keep last
 
 // Health check
 app.get('/api/test', async (req, res) => {

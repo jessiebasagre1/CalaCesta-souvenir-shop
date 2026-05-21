@@ -60,53 +60,88 @@ router.get('/featured', async (req, res) => {
 });
 
 // POST /api/checkout
+// POST /api/checkout
 router.post('/checkout', async (req, res) => {
   try {
     const token = req.headers.authorization?.split(' ')[1];
     if (!token) return res.status(401).json({ message: 'No token provided' });
-
+ 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const user = await User.findById(decoded.userId);
     if (!user || user.userType !== 'customer')
       return res.status(403).json({ message: 'Access denied' });
-
+ 
     const { shippingAddress, phone, email, paymentMethod, notes, items, total } = req.body;
     if (!items?.length) return res.status(400).json({ message: 'No items in order' });
-
+ 
     // Group items by shop
     const shopGroups = items.reduce((groups, item) => {
       const key = item.product.shopId || 'null';
       (groups[key] = groups[key] || []).push(item);
       return groups;
     }, {});
-
-    const orderNumber = 'CC' + Date.now().toString(36).toUpperCase();
+ 
+    const orderNumber  = 'CC' + Date.now().toString(36).toUpperCase();
     const createdOrders = [];
-
+ 
     for (const [shopId, shopItems] of Object.entries(shopGroups)) {
-      const shopTotal = shopItems.reduce((sum, i) => sum + i.product.price * i.quantity, 0);
-      const shopTax   = shopTotal * 0.12;
+      // Load this shop's settings (tax, discount, shipping)
+      const shopUser = shopId !== 'null' ? await User.findById(shopId).lean() : null;
+      const settings = shopUser?.storeSettings || {
+        taxRate:     12,   // default 12%
+        discount:    0,    // default 0%
+        shippingFee: 50,   // default ₱50
+      };
+ 
+      const subtotal     = shopItems.reduce((sum, i) => sum + i.product.price * i.quantity, 0);
+      const discountAmt  = subtotal * (settings.discount / 100);
+      const discountedSub = subtotal - discountAmt;
+      const taxAmt       = discountedSub * (settings.taxRate / 100);
+      const orderTotal   = parseFloat((discountedSub + taxAmt + settings.shippingFee).toFixed(2));
+ 
       const order = new Order({
         customerId:      user._id,
         businessId:      shopId !== 'null' ? shopId : decoded.userId,
-        items:           shopItems.map(i => ({ productId: i.product.id, productName: i.product.name, price: i.product.price, quantity: i.quantity, shopId: i.product.shopId })),
-        total:           parseFloat((shopTotal + shopTax).toFixed(2)),
+        items:           shopItems.map(i => ({
+          productId:   i.product.id,
+          productName: i.product.name,
+          price:       i.product.price,
+          quantity:    i.quantity,
+          shopId:      i.product.shopId,
+        })),
+        // Store a breakdown in trackingNumber for now (extend Order model if desired)
+        total:           orderTotal,
         status:          'pending',
         shippingAddress,
         orderNumber,
-        trackingNumber:  JSON.stringify({ paymentMethod, phone, email, notes, orderNumber }),
+        trackingNumber:  JSON.stringify({
+          paymentMethod, phone, email, notes, orderNumber,
+          breakdown: {
+            subtotal:      parseFloat(subtotal.toFixed(2)),
+            discount:      parseFloat(discountAmt.toFixed(2)),
+            tax:           parseFloat(taxAmt.toFixed(2)),
+            shippingFee:   settings.shippingFee,
+            total:         orderTotal,
+          }
+        }),
       });
+ 
       await order.save();
       createdOrders.push(order._id.toString());
     }
-
+ 
     await Cart.findOneAndDelete({ user: user._id });
-    res.json({ message: 'Order placed successfully!', orderNumber, orderId: createdOrders[0], orders: createdOrders, total });
+    res.json({
+      message: 'Order placed successfully!',
+      orderNumber,
+      orderId: createdOrders[0],
+      orders:  createdOrders,
+      total,
+    });
   } catch (error) {
     if (error.name === 'JsonWebTokenError')
       return res.status(401).json({ message: 'Invalid token' });
     res.status(500).json({ message: 'Failed to place order: ' + error.message });
   }
 });
-
 module.exports = router;
