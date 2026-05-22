@@ -1,0 +1,352 @@
+/* ── NAVBAR ── */
+    header {
+      position: sticky; top: 0; z-index: 200;
+      background: rgba(250,246,238,.92);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(196,98,45,.15);
+    }
+    .nav-wrap {
+      max-width: 1200px; margin: 0 auto;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 24px; height: 68px;
+    }
+    .logo {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.65rem; font-weight: 900;
+      color: var(--terracotta); text-decoration: none;
+      letter-spacing: -0.5px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .logo span { color: var(--brown); }
+    .nav-links { display: flex; gap: 2rem; list-style: none; }
+    .nav-links a {
+      color: var(--brown); text-decoration: none;
+      font-size: .9rem; font-weight: 500;
+      transition: color .2s;
+    }
+    .nav-links a:hover { color: var(--terracotta); }
+    .nav-right { display: flex; align-items: center; gap: 1rem; }
+    .cart-btn {
+      position: relative; color: var(--brown); font-size: 1.25rem;
+      text-decoration: none; transition: color .2s;
+    }
+    .cart-btn:hover { color: var(--terracotta); }
+    .cart-count {
+      position: absolute; top: -8px; right: -8px;
+      background: var(--terracotta); color: #fff;
+      border-radius: 50%; width: 18px; height: 18px;
+      font-size: .65rem; font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .btn {
+      padding: .55rem 1.4rem; border-radius: 50px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: .88rem; font-weight: 600;
+      cursor: pointer; border: none; transition: all .2s; text-decoration: none;
+      display: inline-flex; align-items: center; gap: 6px;
+    }
+    .btn-primary { background: var(--terracotta); color: #fff; }
+    .btn-primary:hover { background: var(--terra-deep); transform: translateY(-1px); box-shadow: var(--shadow-sm); }
+    .btn-outline { background: transparent; color: var(--brown); border: 1.5px solid var(--sand-dark); }
+    .btn-outline:hover { background: var(--sand-light); }
+    .btn-lg { padding: .85rem 2rem; font-size: 1rem; }
+
+    /* User menu dropdown */
+    .user-menu { position: relative; display: flex; align-items: center; gap: 8px; cursor: pointer; }
+    .user-avatar {
+      width: 36px; height: 36px; border-radius: 50%;
+      background: var(--sand); display: flex; align-items: center; justify-content: center;
+      color: var(--brown); font-weight: 600; font-size: .85rem;
+    }
+    .dropdown {
+      position: absolute; top: calc(100% + 10px); right: 0;
+      background: var(--white); border-radius: var(--r-md);
+      box-shadow: var(--shadow-lg); border: 1px solid rgba(196,98,45,.1);
+      min-width: 180px; opacity: 0; visibility: hidden;
+      transform: translateY(-8px); transition: all .25s;
+    }
+    .user-menu:hover .dropdown, .dropdown.active { opacity: 1; visibility: visible; transform: translateY(0); }
+    .dropdown a {
+      display: flex; align-items: center; gap: 10px;
+      padding: .85rem 1.2rem; color: var(--brown);
+      text-decoration: none; font-size: .88rem;
+      border-bottom: 1px solid var(--sand-light); transition: background .2s;
+    }
+    .dropdown a:last-child { border-bottom: none; }
+    .dropdown a:hover { background: var(--sand-light); }
+
+    /* Hamburger */
+    .menu-toggle { display: none; background: none; border: none; cursor: pointer; color: var(--brown); font-size: 1.4rem; }
+
+    /*===============MOBILE RESPONSIVE======================*/
+    /* ── MOBILE ── */
+    @media (max-width: 1024px) {
+      .promo-grid { grid-template-columns: 1fr; }
+      .promo-small-grid { flex-direction: row; }
+      .promo-small-grid .promo-card { min-height: 180px; flex: 1; }
+      .footer-grid { grid-template-columns: 1fr 1fr; }
+    }
+    @media (max-width: 768px) {
+      .hero-inner { grid-template-columns: 1fr; text-align: center; }
+      .hero-visual { display: none; }
+      .hero-sub { margin: 0 auto 2rem; }
+      .hero-btns { justify-content: center; }
+      .hero-stats { justify-content: center; }
+      .nav-links { display: none; }
+      .nav-links.open {
+        display: flex; flex-direction: column;
+        position: absolute; top: 68px; left: 0; right: 0;
+        background: var(--cream); border-top: 1px solid var(--sand);
+        padding: 1rem 1.5rem; gap: 1.2rem; z-index: 999;
+      }
+      .menu-toggle { display: block; }
+      .newsletter-form { flex-direction: column; }
+      .footer-grid { grid-template-columns: 1fr; }
+      .footer-bottom { flex-direction: column; text-align: center; }
+      .promo-small-grid { flex-direction: column; }
+    }
+    @media (max-width: 480px) {
+      .products-grid { grid-template-columns: repeat(2, 1fr); gap: 1rem; }
+      .product-img-wrap { height: 160px; }
+    }
+
+    /* ── SCROLL REVEAL ── */
+    .reveal { opacity: 0; transform: translateY(24px); transition: opacity .6s ease, transform .6s ease; }
+    .reveal.visible { opacity: 1; transform: translateY(0); }
+
+    /*=========MOBILE RESPONSIVE======================*/
+/* ═══════════════════════════════════════════════════
+   CALA-CESTA — MOBILE RESPONSIVE ADDITIONS
+   Add these rules to the END of your existing CSS file.
+   They override the existing @media blocks with
+   more comprehensive fixes.
+   ═══════════════════════════════════════════════════ */
+
+/* ── BASE TOUCH IMPROVEMENTS ── */
+* { -webkit-tap-highlight-color: transparent; }
+
+html { font-size: 15px; }
+
+img { max-width: 100%; height: auto; }
+
+/* Ensure inputs/buttons are tap-friendly */
+button, .btn, .add-cart-btn, .wishlist-btn,
+.tab-btn, .category-pill, .shop-btn {
+  min-height: 44px;
+  touch-action: manipulation;
+}
+
+/* ── SCROLLABLE CONTAINERS ── */
+.tabs {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  padding-bottom: 4px;
+  flex-wrap: nowrap;           /* keep on one scrollable row */
+}
+.tabs::-webkit-scrollbar { display: none; }
+
+.tab-btn { flex-shrink: 0; }  /* prevent squishing */
+
+/* ── TRUST BAR ── */
+@media (prefers-reduced-motion: reduce) {
+  .trust-track { animation: none; }
+}
+
+/* ── ≤1024px  (tablets) ── */
+@media (max-width: 1024px) {
+  .promo-grid { grid-template-columns: 1fr; }
+  .promo-small-grid { flex-direction: row; }
+  .promo-small-grid .promo-card { min-height: 180px; flex: 1; }
+  .footer-grid { grid-template-columns: 1fr 1fr; gap: 2rem; }
+}
+
+/* ── ≤768px  (large phones / small tablets) ── */
+@media (max-width: 768px) {
+
+  /* LAYOUT */
+  section { padding: 3rem 0; }
+  .container { padding: 0 16px; }
+
+  /* HEADER */
+  .nav-wrap { padding: 0 12px; height: 60px; }
+  .nav-right { gap: .4rem; }
+  .logo { font-size: 1.25rem; }
+
+  /* auth buttons — keep visible but compact on mobile */
+  #authSection { display: flex; align-items: center; gap: .4rem; }
+  #authSection .btn-outline { display: inline-flex; padding: .45rem .9rem; font-size: .78rem; }
+  #authSection .btn-primary { padding: .45rem .9rem; font-size: .78rem; }
+
+  /* NAV DROPDOWN */
+  .nav-links.open {
+    top: 60px;
+    padding: 1rem;
+    gap: 0;
+  }
+  .nav-links.open li a {
+    display: block;
+    padding: 12px 8px;
+    font-size: 1rem;
+    border-bottom: 1px solid rgba(196,98,45,.1);
+  }
+  .menu-toggle { display: flex; align-items: center; justify-content: center; }
+
+  /* HERO */
+  .hero { min-height: auto; padding: 3.5rem 0; }
+  .hero-inner {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+    text-align: center;
+    padding: 0 16px;
+  }
+  .hero-visual { display: none; }   /* hide floating cards on small screens */
+  .hero-title { font-size: clamp(2rem, 7vw, 3rem); }
+  .hero-sub { margin: 0 auto 1.5rem; font-size: .95rem; }
+  .hero-btns { justify-content: center; flex-direction: column; align-items: center; }
+  .hero-btns .btn { width: 100%; max-width: 320px; justify-content: center; }
+  .hero-eyebrow { font-size: .72rem; }
+
+  .hero-stats {
+    justify-content: space-around;
+    gap: 1rem;
+    padding-top: 1.5rem;
+    margin-top: 2rem;
+  }
+  .hero-stat-num { font-size: 1.4rem; }
+
+  /* CATEGORIES */
+  .categories-section { padding: 2rem 0 1rem; }
+  .category-pill { padding: .75rem 1.1rem; min-width: 76px; }
+  .category-pill i { font-size: 1.2rem; }
+
+  /* SECTION HEADS */
+  .section-head { margin-bottom: 2rem; }
+  .section-title { font-size: clamp(1.5rem, 5vw, 2rem); }
+
+  /* TABS */
+  .tabs { margin-bottom: 1.5rem; }
+
+  /* PRODUCT GRID — single column on phones, 2-col on tablets */
+  .products-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+  }
+  .product-img-wrap { height: 170px; }
+  .product-body { padding: .85rem .9rem; }
+  .product-name { font-size: .88rem; }
+  .product-price { font-size: 1.05rem; }
+
+  /* PROMO */
+  .promo-section { padding: 2rem 0; }
+  .promo-grid { grid-template-columns: 1fr; gap: 1rem; }
+  .promo-small-grid { flex-direction: column; gap: 1rem; }
+  .promo-small-grid .promo-card { min-height: 150px; flex: none; }
+  .promo-card { padding: 1.5rem; }
+  .promo-title { font-size: 1.3rem; }
+
+  /* SHOPS */
+  .shops-grid { grid-template-columns: 1fr; }
+
+  /* WHY SECTION */
+  .why-grid { grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+  .why-card { padding: .5rem; }
+
+  /* TESTIMONIALS */
+  .testimonials-grid { grid-template-columns: 1fr; }
+  .testimonial-card { padding: 1.25rem; }
+
+  /* NEWSLETTER */
+  .newsletter-section { padding: 3rem 0; }
+  .newsletter-form { flex-direction: column; gap: .6rem; }
+  .newsletter-input { text-align: center; }
+  .newsletter-btn { width: 100%; }
+
+  /* FOOTER */
+  .footer-grid {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+    margin-bottom: 2rem;
+  }
+  .footer-brand { order: 1; }         /* brand first */
+  .footer-col:nth-child(2) { order: 2; }
+  .footer-col:nth-child(3) { order: 3; }
+  .footer-col:nth-child(4) { order: 4; }
+
+  .footer-socials { justify-content: flex-start; gap: .6rem; }
+  .footer-bottom {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: .5rem;
+    padding: 1.25rem 0;
+    font-size: .78rem;
+  }
+  .payment-icons { flex-wrap: wrap; }
+}
+
+/* ── ≤480px  (small phones) ── */
+@media (max-width: 480px) {
+
+  html { font-size: 14px; }
+
+  /* Stack products as single column on very small screens */
+  .products-grid { grid-template-columns: 1fr; gap: .85rem; }
+  .product-img-wrap { height: 200px; }
+  .product-body { padding: 1rem 1.1rem; }
+  .product-name { font-size: .93rem; }
+
+  /* Why section — full width on tiny phones */
+  .why-grid { grid-template-columns: 1fr; }
+
+  /* Hero stats — stack gracefully */
+  .hero-stats { flex-wrap: wrap; gap: 1rem; justify-content: center; }
+  .hero-stats > div { text-align: center; min-width: 80px; }
+
+  /* Trust bar items slightly smaller */
+  .trust-item { font-size: .76rem; }
+
+  .btn-lg { padding: .75rem 1.5rem; font-size: .93rem; }
+
+  /* Smaller promo cards */
+  .promo-card { min-height: 160px; padding: 1.25rem; }
+  .promo-title { font-size: 1.2rem; }
+  .promo-sub { display: none; }        /* hide subtitle on tiny screens */
+
+  /* Shop cards */
+  .shop-header { gap: .75rem; }
+  .shop-icon { width: 44px; height: 44px; font-size: 1.1rem; }
+  .shop-meta { gap: .6rem; flex-wrap: wrap; }
+
+  /* Testimonials */
+  .testimonial-text { font-size: .88rem; }
+
+  /* Newsletter */
+  .newsletter-inner { padding: 0 8px; }
+
+  /* Footer cramped */
+  .footer-bottom { font-size: .74rem; }
+}
+
+/* ── ≤360px  (very small phones e.g. Galaxy A series) ── */
+@media (max-width: 360px) {
+  .category-pill { min-width: 68px; padding: .65rem .9rem; }
+  .category-pill i { font-size: 1.1rem; }
+  .hero-title { font-size: 1.9rem; }
+  .nav-right { gap: .5rem; }
+  #authSection { display: block; } /* hide completely, rely on hamburger menu */
+}
+
+/* ── LANDSCAPE PHONES ── */
+@media (max-width: 768px) and (orientation: landscape) {
+  .hero { min-height: auto; padding: 2rem 0; }
+  .hero-stats { margin-top: 1.5rem; padding-top: 1.5rem; }
+}
+
+/* ── SAFE AREA (iPhone notch / Dynamic Island) ── */
+@supports (padding: env(safe-area-inset-bottom)) {
+  footer { padding-bottom: env(safe-area-inset-bottom); }
+  header { padding-left: env(safe-area-inset-left); padding-right: env(safe-area-inset-right); }
+}
+
+
+

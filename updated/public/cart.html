@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Shopping Cart - Cala-Cesta</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/nav.css">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+   <!-- ─── NAVBAR ─────────────────────────────────────────── -->
+<header>
+  <div class="nav-wrap container">
+    <a href="index.html" class="logo"><i class="fas fa-gift"></i> Cala<span>-Cesta</span></a>
+
+    <nav>
+      <ul class="nav-links" id="navLinks">
+        <li><a href="index.html"><i class="fas fa-home"></i> Home</a></li>
+        <li><a href="index.html#featured-shops"><i class="fas fa-store"></i> Shops</a></li>
+        <li><a href="index.html#top-products">Products</a></li>
+        <li><a href="#promo">Deals</a></li>
+        <li><a href="#about">About</a></li>
+      </ul>
+    </nav>
+
+    <div class="nav-right">
+      <div id="authSection">
+        <a href="login.html" class="btn btn-outline">Login</a>
+        <a href="signup.html" class="btn btn-primary">Sign Up</a>
+      </div>
+      <button class="menu-toggle" id="menuToggle" aria-label="Menu">
+        <i class="fas fa-bars"></i>
+      </button>
+    </div>
+  </div>
+</header>
+<!------------------------------------------------------------------------>
+
+  <div class="container" style="padding: 3rem 0;">
+    <div class="dashboard-header">
+      <h1><i class="fas fa-shopping-cart"></i> Shopping Cart</h1>
+      <p id="cartSummary">Loading cart...</p>
+    </div>
+
+    <div class="cart-container">
+      <div id="cartItems" class="cart-items">
+        <!-- Cart items loaded here -->
+      </div>
+      
+      <div class="cart-summary">
+        <div class="summary-card">
+          <h3>Order Summary</h3>
+          <div class="summary-row">
+            <span>Subtotal:</span>
+            <span id="subtotal">$0.00</span>
+          </div>
+          <div class="summary-row total">
+            <span>Total:</span>
+            <span id="total">$0.00</span>
+          </div>
+          <button class="btn btn-primary" style="width: 100%; margin-top: 1.5rem;" onclick="checkout()">
+            <i class="fas fa-credit-card"></i> Proceed to Checkout
+          </button>
+          <button class="btn btn-secondary" style="width: 100%; margin-top: 0.5rem;" onclick="clearCart()">
+            Clear Cart
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+<script src="js/auth.js"></script>
+ <script>
+  document.getElementById('menuToggle').addEventListener('click', () => {
+  document.getElementById('navLinks').classList.toggle('open');
+});
+ </script>
+<script>
+  window.addEventListener('load', checkAuth);
+  
+  async function checkAuth() {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      window.location.href = 'login.html';
+      return;
+    }
+    await loadCart();
+  }
+
+  async function loadCart() {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch('/api/cart', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      
+      if (!response.ok) throw new Error('Failed to load cart');
+      
+      const cart = await response.json();
+      renderCart(cart);
+    } catch (error) {
+      console.error('Cart load error:', error);
+      showEmptyCart();
+    }
+  }
+
+  function renderCart(cart) {
+    const container = document.getElementById('cartItems');
+    
+    if (cart.items.length === 0) {
+      showEmptyCart();
+      return;
+    }
+
+    container.innerHTML = cart.items.map((item, index) => `
+      <div class="cart-item" data-product-id="${item.product.id}">
+        <div class="cart-item-image" style="background-image: url('${item.product.image}');"></div>
+        <div class="cart-item-details">
+          <h4>${item.product.name}</h4>
+          <p class="shop-name">Shop: ${item.product.shopId || 'Featured'}</p>
+          <p style="color: var(--orange); font-weight: bold;">₱${item.product.price.toFixed(2)} each</p>
+          <div class="quantity-controls">
+            <button class="qty-btn" onclick="updateQuantity('${item.product.id}', ${item.quantity - 1})" ${item.quantity <= 1 ? 'disabled' : ''}>-</button>
+            <span class="qty-display">${item.quantity}</span>
+            <button class="qty-btn" onclick="updateQuantity('${item.product.id}', ${item.quantity + 1})">+</button>
+          </div>
+        </div>
+        <div class="cart-item-price">
+          <div style="text-align: right; margin-bottom: 1rem;">
+            <span style="font-size: 1.2rem; font-weight: bold; color: var(--orange);">
+              ₱${(item.product.price * item.quantity).toFixed(2)}
+            </span>
+          </div>
+          <button class="remove-btn" onclick="removeItem('${item.product.id}')" title="Remove item">
+            <i class="fas fa-trash"></i>
+          </button>
+        </div>
+      </div>
+    `).join('');
+
+    updateSummary(cart.total, cart.items.length);
+  }
+
+  function showEmptyCart() {
+    const container = document.getElementById('cartItems');
+    container.innerHTML = `
+      <div style="text-align: center; padding: 4rem 2rem; color: #666;">
+        <i class="fas fa-shopping-cart" style="font-size: 5rem; margin-bottom: 1.5rem; opacity: 0.3;"></i>
+        <h3>Your Cart is Empty</h3>
+        <p style="margin-bottom: 2rem;">You haven't added any items yet.</p>
+        <a href="index.html" class="btn btn-primary" style="font-size: 1.1rem; padding: 1rem 2rem;">
+          <i class="fas fa-arrow-left"></i> Continue Shopping
+        </a>
+      </div>
+    `;
+    updateSummary(0, 0);
+  }
+
+  function updateSummary(total, itemCount) {
+    document.getElementById('subtotal').textContent = `₱${total.toFixed(2)}`;
+    document.getElementById('total').textContent = `₱${total.toFixed(2)}`;
+    document.getElementById('cartSummary').textContent = 
+      `${itemCount} item${itemCount !== 1 ? 's' : ''} • Total: ₱${total.toFixed(2)}`;
+  }
+
+  // ✅ WORKING REMOVE FUNCTION
+  async function removeItem(productId) {
+    if (!confirm('Remove this item from cart?')) return;
+    
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`/api/cart/update/${productId}`, {
+        method: 'PUT',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ quantity: 0 }) // quantity: 0 = DELETE
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        console.log('✅ Item removed:', productId);
+        
+        // Visual feedback
+        const itemRow = document.querySelector(`[data-product-id="${productId}"]`);
+        if (itemRow) {
+          itemRow.style.animation = 'fadeOut 0.5s ease-out';
+          setTimeout(() => {
+            loadCart(); // Reload entire cart
+          }, 500);
+        }
+      } else {
+        alert('Failed to remove item');
+      }
+    } catch (error) {
+      console.error('Remove error:', error);
+      alert('Failed to remove item');
+    }
+  }
+
+  // ✅ WORKING QUANTITY UPDATE
+  async function updateQuantity(productId, quantity) {
+    if (quantity < 0) quantity = 0;
+    
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`/api/cart/update/${productId}`, {
+        method: 'PUT',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ quantity })
+      });
+      
+      if (response.ok) {
+        await loadCart(); // Refresh cart
+      }
+    } catch (error) {
+      console.error('Update quantity error:', error);
+    }
+  }
+
+  // ✅ WORKING CLEAR CART
+  async function clearCart() {
+    if (!confirm('Clear ALL items from cart? This cannot be undone.')) return;
+    
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch('/api/cart/clear', {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      
+      if (response.ok) {
+        showEmptyCart();
+      }
+    } catch (error) {
+      alert('Failed to clear cart');
+    }
+  }
+
+  // ✅ CHECKOUT (placeholder)
+  async function checkout() {
+  const token = localStorage.getItem('token');
+  if (!token) {
+    window.location.href = 'login.html';
+    return;
+  }
+ 
+  // Verify cart isn't empty before redirecting
+  try {
+    const res = await fetch('/api/cart', {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    const cart = await res.json();
+ 
+    if (!cart.items || cart.items.length === 0) {
+      alert('Your cart is empty!');
+      return;
+    }
+ 
+    window.location.href = 'checkout.html';
+  } catch {
+    window.location.href = 'checkout.html';
+  }
+}
+ 
+
+  // Global logout
+  function logout() {
+    localStorage.clear();
+    window.location.href = 'index.html';
+  }
+</script>
+
+<style>
+/* Add these styles to cart.html for smooth animations */
+@keyframes fadeOut {
+  from { opacity: 1; transform: translateX(0); }
+  to { opacity: 0; transform: translateX(-50px); }
+}
+
+.cart-item {
+  transition: all 0.3s ease;
+}
+
+.cart-item:hover {
+  background: #f8f9fa;
+}
+
+.qty-btn {
+  width: 40px;
+  height: 40px;
+  border: 2px solid var(--light-brown);
+  background: white;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  transition: all 0.2s;
+}
+
+.qty-btn:hover:not(:disabled) {
+  background: var(--light-brown);
+  transform: scale(1.05);
+}
+
+.qty-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.qty-display {
+  min-width: 40px;
+  text-align: center;
+  font-weight: bold;
+  font-size: 1.1rem;
+  color: var(--orange);
+}
+
+.remove-btn {
+  width: 45px;
+  height: 45px;
+  border-radius: 50%;
+  background: #dc3545;
+  color: white;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  transition: transform 0.2s;
+}
+
+.remove-btn:hover {
+  transform: scale(1.1);
+  background: #c82333;
+}
+</style>
+</body>
+</html>

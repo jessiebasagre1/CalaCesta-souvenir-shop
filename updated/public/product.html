@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Product — Cala-Cesta</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/product.css">
+</head>
+<body>
+
+<!-- NAV -->
+<header>
+  <div class="nav-wrap">
+    <a href="index.html" class="logo"><i class="fas fa-gift"></i> Cala<span>-Cesta</span></a>
+    <div class="nav-right">
+      <a href="cart.html" class="cart-btn" title="Cart">
+        <i class="fas fa-shopping-cart"></i>
+        <span class="cart-count" id="cartCount" style="display:none">0</span>
+      </a>
+      <div id="authSection">
+        <a href="login.html" class="btn btn-outline">Login</a>
+        <a href="signup.html" class="btn btn-primary">Sign Up</a>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- BREADCRUMB -->
+<div class="breadcrumb">
+  <a href="index.html">Home</a>
+  <i class="fas fa-chevron-right"></i>
+  <a href="index.html#top-products" id="bcCategory">Products</a>
+  <i class="fas fa-chevron-right"></i>
+  <span id="bcProduct" style="color:var(--brown);font-weight:600">Loading…</span>
+</div>
+
+<!-- MAIN -->
+<div class="product-page">
+
+  <!-- PRODUCT SECTION (skeleton initially) -->
+  <div class="product-layout" id="productMain">
+    <div class="gallery">
+      <div class="main-img-wrap skeleton" style="border-radius:20px"></div>
+      <div class="thumb-row" style="margin-top:1rem">
+        <div class="skeleton thumb"></div>
+        <div class="skeleton thumb"></div>
+        <div class="skeleton thumb"></div>
+      </div>
+    </div>
+    <div class="product-info">
+      <div class="skeleton" style="height:14px;width:100px;margin-bottom:1rem"></div>
+      <div class="skeleton" style="height:44px;width:88%;margin-bottom:1.25rem"></div>
+      <div class="skeleton" style="height:18px;width:220px;margin-bottom:1.5rem"></div>
+      <div class="skeleton" style="height:52px;width:150px;margin-bottom:1.75rem"></div>
+      <div class="skeleton" style="height:1px;margin-bottom:1.5rem"></div>
+      <div class="skeleton" style="height:80px;margin-bottom:1.5rem;border-radius:14px"></div>
+      <div class="skeleton" style="height:50px;border-radius:50px"></div>
+    </div>
+  </div>
+
+  <!-- TABS -->
+  <div class="tabs-section" id="tabsSection" style="display:none">
+    <div class="tabs-nav">
+      <button class="tab-nav-btn active" data-tab="description">Description</button>
+      <button class="tab-nav-btn" data-tab="reviews" id="reviewsTabBtn">
+        Reviews (<span id="reviewCountTab">0</span>)
+      </button>
+    </div>
+
+    <!-- DESCRIPTION TAB -->
+    <div class="tab-pane active" id="tab-description">
+      <div class="description-body">
+        <p id="productDescription">Loading…</p>
+        <table class="spec-table" id="specTable"></table>
+      </div>
+    </div>
+
+    <!-- REVIEWS TAB -->
+    <div class="tab-pane" id="tab-reviews">
+      <div class="reviews-layout">
+        <div>
+          <div class="rating-summary" id="ratingSummary">
+            <div class="big-rating">
+              <div class="big-num" id="avgRatingBig">—</div>
+              <div class="big-stars" id="avgStarsBig">☆☆☆☆☆</div>
+              <div class="big-count"><span id="totalReviewCount">0</span> reviews</div>
+            </div>
+            <!-- SOLD COUNT IN SUMMARY -->
+            <div class="sold-summary-box" id="soldSummaryBox" style="display:none">
+              <i class="fas fa-fire"></i>
+              <div>
+                <strong id="soldSummaryNum">0</strong>
+                <span>units sold</span>
+              </div>
+            </div>
+            <div class="bar-rows" id="ratingBars"></div>
+          </div>
+        </div>
+
+        <div>
+          <!-- WRITE REVIEW -->
+          <div class="write-review-card" id="writeReviewCard" style="display:none">
+            <h4><i class="fas fa-feather-alt" style="color:var(--terracotta);margin-right:6px"></i> Write a Review</h4>
+            <div id="writeReviewNote" style="font-size:.82rem;color:var(--terracotta);margin-bottom:1rem;font-weight:600"></div>
+            <div class="star-picker" id="starPicker">
+              <i class="far fa-star" data-val="1"></i>
+              <i class="far fa-star" data-val="2"></i>
+              <i class="far fa-star" data-val="3"></i>
+              <i class="far fa-star" data-val="4"></i>
+              <i class="far fa-star" data-val="5"></i>
+            </div>
+            <input type="text" class="review-title-input" id="reviewTitle" placeholder="Give your review a title">
+            <textarea class="review-body-input" id="reviewBody" placeholder="Share your experience with this product…"></textarea>
+            <button class="submit-review-btn" id="submitReviewBtn" onclick="submitReview()">
+              <i class="fas fa-paper-plane"></i> Submit Review
+            </button>
+            <div style="font-size:.76rem;color:var(--muted);margin-top:.5rem">Your email won't be published.</div>
+          </div>
+
+          <!-- REVIEWS LIST -->
+          <div class="reviews-list" id="reviewsList">
+            <div class="spinner-sm"></div>
+          </div>
+          <div id="loadMoreWrap" style="text-align:center;margin-top:1.5rem;display:none">
+            <button class="btn btn-outline" onclick="loadMoreReviews()"><i class="fas fa-sync-alt"></i> Load More</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RELATED -->
+  <div class="related-section" id="relatedSection" style="display:none">
+    <div class="section-header">
+      <h3>More From This Shop</h3>
+    </div>
+    <div class="related-grid" id="relatedGrid"></div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"><i class="fas fa-check-circle"></i><span id="toastMsg"></span></div>
+
+<script>
+/* ── STATE ── */
+let product = null;
+let reviews = [];
+let soldCount = 0;
+let selectedRating = 0;
+let currentUser = null;
+let reviewPage = 0;
+const REVIEWS_PER_PAGE = 5;
+
+/* ── INIT ── */
+document.addEventListener('DOMContentLoaded', async () => {
+  const params = new URLSearchParams(location.search);
+  const productId = params.get('id');
+  if (!productId) { showToast('Product not found', 'error'); return; }
+
+  await loadAuth();
+  await loadProduct(productId);
+  await loadReviews(productId);
+  await loadSoldCount(productId);
+  await loadRelated();
+  initStarPicker();
+});
+
+/* ── AUTH ── */
+async function loadAuth() {
+  const token = localStorage.getItem('token');
+  const authSection = document.getElementById('authSection');
+  const cartCountEl = document.getElementById('cartCount');
+
+  if (!token) {
+    authSection.innerHTML = `<a href="login.html" class="btn btn-outline">Login</a><a href="signup.html" class="btn btn-primary">Sign Up</a>`;
+    return;
+  }
+  try {
+    const res = await fetch('/api/auth/profile', { headers: { Authorization: `Bearer ${token}` } });
+    if (!res.ok) throw new Error();
+    currentUser = await res.json();
+
+    try {
+      const cRes = await fetch('/api/cart', { headers: { Authorization: `Bearer ${token}` } });
+      const cart = await cRes.json();
+      const count = cart.items?.length || 0;
+      if (count > 0) { cartCountEl.textContent = count; cartCountEl.style.display = 'flex'; }
+    } catch {}
+
+    authSection.innerHTML = `
+      <div class="user-menu">
+        <div class="user-avatar">${currentUser.name.charAt(0).toUpperCase()}</div>
+        <span style="font-size:.85rem;font-weight:600;color:var(--brown)">${currentUser.name.split(' ')[0]}</span>
+        <i class="fas fa-chevron-down" style="font-size:.65rem;color:var(--muted)"></i>
+        <div class="dropdown">
+          <a href="${currentUser.userType==='business'?'business-dashboard.html':'profile.html'}"><i class="fas fa-user"></i> ${currentUser.userType==='business'?'Dashboard':'Profile'}</a>
+          <a href="cart.html"><i class="fas fa-shopping-cart"></i> Cart</a>
+          <a href="#" onclick="localStorage.clear();location.href='login.html'"><i class="fas fa-sign-out-alt"></i> Logout</a>
+        </div>
+      </div>`;
+  } catch {
+    localStorage.removeItem('token');
+  }
+}
+
+/* ── LOAD PRODUCT ── */
+async function loadProduct(id) {
+  try {
+    const res = await fetch(`/api/products/${id}`);
+    if (!res.ok) throw new Error('Not found');
+    product = await res.json();
+
+    document.title = `${product.name} — Cala-Cesta`;
+    document.getElementById('bcProduct').textContent = product.name;
+    document.getElementById('bcCategory').textContent = product.category || 'Products';
+
+    renderProductMain();
+    document.getElementById('tabsSection').style.display = 'block';
+    document.getElementById('productDescription').textContent =
+      product.description || 'A beautiful handcrafted piece made with care by local Filipino artisans. Each item is unique and made with traditional techniques passed down through generations.';
+
+    const specs = [
+      ['Category', product.category || 'Handcraft'],
+      ['SKU', product._id?.slice(-8).toUpperCase() || 'N/A'],
+      ['Stock', product.stock > 0 ? `${product.stock} available` : 'Out of Stock'],
+      ['Shop', product.shopName || 'Local Artisan'],
+    ];
+    document.getElementById('specTable').innerHTML = specs.map(([k,v]) =>
+      `<tr><td>${k}</td><td>${v}</td></tr>`).join('');
+  } catch {
+    document.getElementById('productMain').innerHTML = `
+      <div style="text-align:center;padding:4rem;grid-column:1/-1">
+        <i class="fas fa-box-open" style="font-size:2.5rem;color:var(--sand-dark);margin-bottom:1rem;display:block"></i>
+        <h3 style="font-family:'Cormorant Garamond',serif;color:var(--brown)">Product not found</h3>
+        <p style="color:var(--muted);margin-top:.5rem">This product may no longer be available.</p>
+        <a href="index.html" class="btn btn-primary" style="margin-top:1.5rem">← Back to Home</a>
+      </div>`;
+  }
+}
+
+/* ── LOAD SOLD COUNT ── */
+async function loadSoldCount(productId) {
+  try {
+    const res = await fetch(`/api/products/${productId}/sold-count`);
+    if (!res.ok) return;
+    const data = await res.json();
+    soldCount = data.soldCount || 0;
+    updateSoldDisplay();
+  } catch {
+    // Fallback: soldCount stays 0
+  }
+}
+
+function updateSoldDisplay() {
+  // Overlay badge on main image
+  const badge = document.getElementById('soldBadge');
+  if (badge && soldCount > 0) {
+    badge.querySelector('.sold-num').textContent = soldCount.toLocaleString();
+    badge.classList.add('visible');
+  }
+
+  // Inline proof row
+  const inlineEl = document.getElementById('soldCountInline');
+  if (inlineEl) {
+    if (soldCount > 0) {
+      inlineEl.style.display = 'flex';
+      inlineEl.querySelector('.count-num').textContent = soldCount.toLocaleString();
+    } else {
+      inlineEl.style.display = 'none';
+    }
+  }
+
+  // Reviews panel box
+  const summaryBox = document.getElementById('soldSummaryBox');
+  const summaryNum = document.getElementById('soldSummaryNum');
+  if (summaryBox && summaryNum && soldCount > 0) {
+    summaryNum.textContent = soldCount.toLocaleString();
+    summaryBox.style.display = 'flex';
+  }
+}
+//=================gallery navigation function===============
+let galleryIndex = 0;
+let galleryImages = [];
+
+function galleryNav(dir) {
+  galleryGoTo((galleryIndex + dir + galleryImages.length) % galleryImages.length);
+}
+
+function galleryGoTo(i) {
+  galleryIndex = i;
+  const img = document.getElementById('mainImg');
+  if (img) img.src = galleryImages[i];
+
+  document.querySelectorAll('.thumb').forEach((t, idx) => t.classList.toggle('active', idx === i));
+  document.querySelectorAll('.gallery-dot').forEach((d, idx) => d.classList.toggle('active', idx === i));
+}
+/* ── RENDER PRODUCT ── */
+function renderProductMain() {
+  const stock = product.stock || 0;
+  const stockPct = Math.min(100, Math.max(4, (stock / 50) * 100));
+  const isLow = stock > 0 && stock <= 10;
+  const outOfStock = stock === 0;
+
+  // Build images array — use product.images if available, else repeat single image
+const imgList = (product.images && product.images.length > 0)
+  ? product.images
+  : (product.image ? [product.image] : ['https://images.unsplash.com/photo-1608043152266-119cb09fc56e?w=600&fit=crop']);
+
+document.getElementById('productMain').innerHTML = `
+  <div class="gallery">
+    <div class="main-img-wrap">
+      <img src="${imgList[0]}" alt="${product.name}" id="mainImg"
+        onerror="this.src='https://images.unsplash.com/photo-1608043152266-119cb09fc56e?w=600&fit=crop'">
+      ${product.category ? `<div class="img-badge">${product.category}</div>` : ''}
+      <div class="sold-badge" id="soldBadge">
+        <i class="fas fa-fire"></i>
+        <span><span class="sold-num">0</span> sold</span>
+      </div>
+      <!-- Shopee-style nav arrows -->
+      ${imgList.length > 1 ? `
+      <button class="gallery-arrow left" onclick="galleryNav(-1)"><i class="fas fa-chevron-left"></i></button>
+      <button class="gallery-arrow right" onclick="galleryNav(1)"><i class="fas fa-chevron-right"></i></button>
+      <div class="gallery-dots" id="galleryDots">
+        ${imgList.map((_, i) => `<span class="gallery-dot ${i===0?'active':''}" onclick="galleryGoTo(${i})"></span>`).join('')}
+      </div>` : ''}
+    </div>
+    <div class="thumb-row">
+      ${imgList.map((img, i) => `
+        <div class="thumb ${i===0?'active':''}" onclick="galleryGoTo(${i})">
+          <img src="${img}" alt=""
+            onerror="this.src='https://images.unsplash.com/photo-1608043152266-119cb09fc56e?w=100&fit=crop'">
+        </div>`).join('')}
+    </div>
+  </div>
+
+    <div class="product-info">
+      <div class="shop-link-row">
+        <a href="shop.html?id=${product.shopId || product.businessId}" class="shop-link">
+          <i class="fas fa-store"></i> ${product.shopName || 'Local Shop'}
+        </a>
+      </div>
+
+      <h1 class="product-title">${product.name}</h1>
+
+      <div class="proof-row">
+        <div class="stars-group">
+          <div class="stars-display" id="productStars">☆☆☆☆☆</div>
+          <span class="rating-num" id="productRatingNum">—</span>
+        </div>
+        <a href="#" class="review-count-link" onclick="switchToReviews(event)">
+          <span id="productReviewCount">0</span> reviews
+        </a>
+        <div class="proof-divider"></div>
+        <div class="sold-count-inline" id="soldCountInline" style="display:none">
+          <i class="fas fa-fire"></i>
+          <span class="count-num">0</span>
+          <span>sold</span>
+        </div>
+      </div>
+
+      <div class="price-section">
+        <div class="price-row">
+          <span class="price-main">₱${product.price?.toFixed(2)}</span>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="trust-grid">
+        <div class="trust-item">
+          <i class="fas fa-truck"></i>
+          <div class="trust-item-text">
+            <strong>Free Delivery</strong>
+            <span>Orders over ₱1,500</span>
+          </div>
+        </div>
+        <div class="trust-item">
+          <i class="fas fa-shield-alt"></i>
+          <div class="trust-item-text">
+            <strong>Buyer Protection</strong>
+            <span>30-day returns</span>
+          </div>
+        </div>
+        <div class="trust-item">
+          <i class="fas fa-certificate"></i>
+          <div class="trust-item-text">
+            <strong>Authenticated</strong>
+            <span>Verified artisan piece</span>
+          </div>
+        </div>
+        <div class="trust-item">
+          <i class="fas fa-hands"></i>
+          <div class="trust-item-text">
+            <strong>Handcrafted</strong>
+            <span>Supports local makers</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="stock-section">
+        <div class="stock-header">
+          <span class="stock-label-main ${isLow ? 'low' : ''}">
+            ${outOfStock
+              ? '<i class="fas fa-times-circle"></i> Out of Stock'
+              : isLow
+                ? `<i class="fas fa-exclamation-triangle"></i> Only ${stock} left!`
+                : `<i class="fas fa-check-circle" style="color:var(--success)"></i> In Stock`}
+          </span>
+          <span class="stock-count">${outOfStock ? '' : `${stock} units`}</span>
+        </div>
+        <div class="stock-track">
+          <div class="stock-fill ${isLow ? 'low' : ''}" style="width:${outOfStock?0:stockPct}%"></div>
+        </div>
+      </div>
+
+      <div class="qty-row">
+        <span class="qty-label">Qty</span>
+        <div class="qty-control">
+          <button class="qty-btn" onclick="changeQty(-1)"><i class="fas fa-minus"></i></button>
+          <span class="qty-num" id="qtyNum">1</span>
+          <button class="qty-btn" onclick="changeQty(1)"><i class="fas fa-plus"></i></button>
+        </div>
+      </div>
+
+      <div class="action-row">
+        <button class="add-cart-main" id="addToCartBtn" onclick="addToCart()" ${outOfStock ? 'disabled' : ''}>
+          <i class="fas fa-cart-plus"></i>
+          ${outOfStock ? 'Out of Stock' : 'Add to Cart'}
+        </button>
+        <button class="wishlist-btn" id="wishlistBtn" onclick="toggleWishlist(this)" title="Wishlist">
+          <i class="far fa-heart"></i>
+        </button>
+      </div>
+    </div>
+  `;
+
+  // After render, update sold display if we already have the count
+  if (soldCount > 0) updateSoldDisplay();
+  // After rendering
+  galleryImages = imgList;
+  galleryIndex = 0;
+
+  // Show rating immediately from product data
+  if (product.avgRating !== undefined) {
+    updateProductRatingDisplay(product.avgRating, product.reviewCount || 0);
+  }
+}
+
+/* ── GALLERY ── */
+function switchImg(src, thumbEl) {
+  document.getElementById('mainImg').src = src;
+  document.querySelectorAll('.thumb').forEach(t => t.classList.remove('active'));
+  thumbEl.classList.add('active');
+}
+
+/* ── QTY ── */
+let qty = 1;
+function changeQty(delta) {
+  const max = product?.stock || 99;
+  qty = Math.max(1, Math.min(max, qty + delta));
+  document.getElementById('qtyNum').textContent = qty;
+}
+
+/* ── ADD TO CART ── */
+async function addToCart() {
+  const token = localStorage.getItem('token');
+  if (!token) { showToast('Please login to add items to cart', 'error'); setTimeout(() => location.href='login.html', 1200); return; }
+  const btn = document.getElementById('addToCartBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Adding…';
+  try {
+    const res = await fetch('/api/cart/add', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ productId: product._id || product.id, name: product.name, price: product.price, image: product.image, shopId: product.shopId || product.businessId, quantity: qty })
+    });
+    const data = await res.json();
+    if (res.ok) {
+      showToast(`${product.name} added to cart!`);
+      const el = document.getElementById('cartCount');
+      el.textContent = data.cart; el.style.display = 'flex';
+      btn.innerHTML = '<i class="fas fa-check"></i> Added!';
+      setTimeout(() => { btn.disabled = false; btn.innerHTML = '<i class="fas fa-cart-plus"></i> Add to Cart'; }, 2000);
+    } else {
+      showToast(data.message || 'Failed to add', 'error');
+      btn.disabled = false; btn.innerHTML = '<i class="fas fa-cart-plus"></i> Add to Cart';
+    }
+  } catch {
+    showToast('Please login first', 'error');
+    btn.disabled = false; btn.innerHTML = '<i class="fas fa-cart-plus"></i> Add to Cart';
+  }
+}
+
+/* ── WISHLIST ── */
+function toggleWishlist(btn) {
+  const icon = btn.querySelector('i');
+  const isAdded = icon.classList.contains('fas');
+  icon.className = isAdded ? 'far fa-heart' : 'fas fa-heart';
+  btn.classList.toggle('active', !isAdded);
+  showToast(isAdded ? 'Removed from wishlist' : 'Saved to wishlist ♥');
+}
+
+/* ── REVIEWS ── */
+async function loadReviews(productId) {
+  try {
+    const res = await fetch(`/api/products/${productId}/reviews`);
+    const data = await res.json();
+    reviews = data.reviews || data || [];
+    renderReviews();
+    renderRatingSummary();
+    checkWriteEligibility(productId);
+  } catch {
+    reviews = [];
+    renderReviews();
+  }
+}
+
+function renderRatingSummary() {
+  const avg = reviews.length ? reviews.reduce((s, r) => s + (r.rating || 0), 0) / reviews.length : 0;
+  const counts = [0,0,0,0,0];
+  reviews.forEach(r => { if (r.rating >= 1 && r.rating <= 5) counts[r.rating-1]++; });
+
+  document.getElementById('avgRatingBig').textContent = reviews.length ? avg.toFixed(1) : '—';
+  document.getElementById('avgStarsBig').innerHTML = renderStars(avg);
+  document.getElementById('totalReviewCount').textContent = reviews.length;
+  document.getElementById('reviewCountTab').textContent = reviews.length;
+
+  document.getElementById('ratingBars').innerHTML = [5,4,3,2,1].map(n => `
+    <div class="bar-row">
+      <span class="star-label">${n}</span>
+      <i class="fas fa-star" style="font-size:.65rem;color:var(--sand-dark)"></i>
+      <div class="bar-track">
+        <div class="bar-fill" style="width:${reviews.length ? (counts[n-1]/reviews.length*100) : 0}%"></div>
+      </div>
+      <span class="bar-count">${counts[n-1]}</span>
+    </div>`).join('');
+
+  updateProductRatingDisplay(avg, reviews.length);
+}
+
+function updateProductRatingDisplay(avg, count) {
+  const starsEl = document.getElementById('productStars');
+  const numEl = document.getElementById('productRatingNum');
+  const countEl = document.getElementById('productReviewCount');
+  if (starsEl) starsEl.innerHTML = renderStars(avg);
+  if (numEl) numEl.textContent = avg > 0 ? avg.toFixed(1) : '—';
+  if (countEl) countEl.textContent = count;
+}
+
+function renderStars(avg) {
+  return [1,2,3,4,5].map(i => {
+    if (avg >= i) return '<i class="fas fa-star"></i>';
+    if (avg >= i - 0.5) return '<i class="fas fa-star-half-alt"></i>';
+    return '<i class="far fa-star"></i>';
+  }).join('');
+}
+
+function renderReviews() {
+  const el = document.getElementById('reviewsList');
+  const visible = reviews.slice(0, (reviewPage + 1) * REVIEWS_PER_PAGE);
+
+  if (!reviews.length) {
+    el.innerHTML = `<div class="empty-reviews"><i class="fas fa-comment-slash"></i><p>No reviews yet. Be the first to share your experience!</p></div>`;
+    return;
+  }
+
+  el.innerHTML = visible.map(r => `
+    <div class="review-card">
+      <div class="review-header">
+        <div class="reviewer-avatar">${(r.userName || r.user?.name || 'A').charAt(0).toUpperCase()}</div>
+        <div class="reviewer-info">
+          <div class="reviewer-name">${r.userName || r.user?.name || 'Anonymous'}</div>
+          <div class="review-meta">${new Date(r.createdAt).toLocaleDateString('en-US', {year:'numeric',month:'long',day:'numeric'})}</div>
+        </div>
+      </div>
+      <div class="review-stars">${renderStars(r.rating)}</div>
+      ${r.title ? `<div class="review-title-text">${r.title}</div>` : ''}
+      <div class="review-body-text">${r.comment || r.body || ''}</div>
+      ${r.verified ? `<div class="review-verified"><i class="fas fa-check-circle"></i> Verified Purchase</div>` : ''}
+      <div class="review-helpful">
+        <span>Helpful?</span>
+        <button class="helpful-btn" onclick="markHelpful(this,'${r._id}','yes')">👍 Yes (${r.helpful||0})</button>
+        <button class="helpful-btn" onclick="markHelpful(this,'${r._id}','no')">👎 No</button>
+      </div>
+    </div>`).join('');
+
+  document.getElementById('loadMoreWrap').style.display = visible.length < reviews.length ? 'block' : 'none';
+}
+
+async function markHelpful(btn, reviewId, type) {
+  if (type === 'yes' && reviewId && reviewId !== 'undefined') {
+    try {
+      const res = await fetch(`/api/reviews/${reviewId}/helpful`, { method: 'POST' });
+      const data = await res.json();
+      if (res.ok) btn.textContent = `👍 Yes (${data.helpful})`;
+    } catch {}
+  }
+  btn.disabled = true;
+  btn.closest('.review-helpful').querySelectorAll('.helpful-btn').forEach(b => b.disabled = true);
+}
+
+function loadMoreReviews() { reviewPage++; renderReviews(); }
+
+/* ── WRITE REVIEW ELIGIBILITY ── */
+async function checkWriteEligibility(productId) {
+  const token = localStorage.getItem('token');
+  const card = document.getElementById('writeReviewCard');
+  if (!token || !currentUser || currentUser.userType === 'business') return;
+
+  try {
+    const res = await fetch(`/api/products/${productId}/review-eligibility`, { headers: { Authorization: `Bearer ${token}` } });
+    const data = await res.json();
+
+    if (data.canReview) {
+      card.style.display = 'block';
+      document.getElementById('writeReviewNote').innerHTML = `<i class="fas fa-check-circle"></i> You purchased this item — share your experience!`;
+    } else if (data.reason === 'already_reviewed') {
+      card.style.display = 'block';
+      card.innerHTML = `<div style="padding:1rem;background:var(--success-light);border-radius:var(--r-md);color:var(--success);font-weight:600;font-size:.88rem"><i class="fas fa-check-circle"></i> You've already reviewed this product. Thank you!</div>`;
+    } else if (data.reason === 'no_purchase') {
+      card.style.display = 'block';
+      card.innerHTML = `<div style="padding:1rem;background:var(--sand-light);border-radius:var(--r-md);color:var(--muted);font-size:.84rem"><i class="fas fa-lock" style="margin-right:6px"></i> Only verified buyers can review this product.</div>`;
+    }
+  } catch {
+    // Fallback to order-check
+    try {
+      const res = await fetch('/api/customer/orders', { headers: { Authorization: `Bearer ${token}` } });
+      if (!res.ok) return;
+      const orders = await res.json();
+      const hasDelivered = orders.some(o => o.status === 'delivered' && o.items?.some(i => i.productId === productId));
+      const alreadyReviewed = reviews.some(r => r.userId === currentUser._id || r.userId === currentUser.id);
+
+      if (hasDelivered && !alreadyReviewed) {
+        card.style.display = 'block';
+        document.getElementById('writeReviewNote').innerHTML = `<i class="fas fa-check-circle"></i> You purchased this item — share your experience!`;
+      } else if (alreadyReviewed) {
+        card.style.display = 'block';
+        card.innerHTML = `<div style="padding:1rem;background:var(--success-light);border-radius:var(--r-md);color:var(--success);font-weight:600"><i class="fas fa-check-circle"></i> You've already reviewed this. Thank you!</div>`;
+      }
+    } catch {}
+  }
+}
+
+/* ── STAR PICKER ── */
+function initStarPicker() {
+  const picker = document.getElementById('starPicker');
+  if (!picker) return;
+  picker.querySelectorAll('i').forEach(star => {
+    star.addEventListener('mouseover', () => highlightStars(parseInt(star.dataset.val)));
+    star.addEventListener('mouseout', () => highlightStars(selectedRating));
+    star.addEventListener('click', () => { selectedRating = parseInt(star.dataset.val); highlightStars(selectedRating); });
+  });
+}
+
+function highlightStars(n) {
+  const picker = document.getElementById('starPicker');
+  if (!picker) return;
+  picker.querySelectorAll('i').forEach(s => {
+    s.className = parseInt(s.dataset.val) <= n ? 'fas fa-star lit' : 'far fa-star';
+  });
+}
+
+/* ── SUBMIT REVIEW ── */
+async function submitReview() {
+  const token = localStorage.getItem('token');
+  if (!token) { showToast('Please login first', 'error'); return; }
+  if (selectedRating === 0) { showToast('Please select a star rating', 'error'); return; }
+  const title = document.getElementById('reviewTitle')?.value.trim();
+  const body = document.getElementById('reviewBody')?.value.trim();
+  if (!body) { showToast('Please write your review', 'error'); return; }
+
+  const btn = document.getElementById('submitReviewBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting…';
+
+  const productId = new URLSearchParams(location.search).get('id');
+  try {
+    const res = await fetch(`/api/products/${productId}/reviews`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ rating: selectedRating, title, comment: body })
+    });
+    const data = await res.json();
+    if (res.ok) {
+      showToast('Review submitted! Thank you 🙏');
+      await loadReviews(productId);
+      document.getElementById('writeReviewCard').innerHTML = `<div style="padding:1rem;background:var(--success-light);border-radius:var(--r-md);color:var(--success);font-weight:600"><i class="fas fa-check-circle"></i> Review submitted! Thank you for your feedback.</div>`;
+    } else {
+      showToast(data.message || 'Failed to submit', 'error');
+      btn.disabled = false; btn.innerHTML = '<i class="fas fa-paper-plane"></i> Submit Review';
+    }
+  } catch {
+    showToast('Submission failed', 'error');
+    btn.disabled = false; btn.innerHTML = '<i class="fas fa-paper-plane"></i> Submit Review';
+  }
+}
+
+/* ── RELATED ── */
+async function loadRelated() {
+  if (!product) return;
+  try {
+    const res = await fetch(`/api/products/related?shopId=${product.shopId || product.businessId}&category=${encodeURIComponent(product.category||'')}&exclude=${product._id||product.id}`);
+    const data = await res.json();
+    if (data.length > 0) {
+      document.getElementById('relatedSection').style.display = 'block';
+      document.getElementById('relatedGrid').innerHTML = data.slice(0,4).map(p => `
+        <a href="product.html?id=${p._id}" class="related-card">
+          <div class="related-img">
+            <img src="${p.image || 'https://images.unsplash.com/photo-1608043152266-119cb09fc56e?w=300&fit=crop'}"
+              alt="${p.name}" onerror="this.src='https://images.unsplash.com/photo-1608043152266-119cb09fc56e?w=300&fit=crop'">
+          </div>
+          <div class="related-body">
+            <div class="related-name">${p.name}</div>
+            <div class="related-price">₱${p.price?.toFixed(2)}</div>
+          </div>
+        </a>`).join('');
+    }
+  } catch {}
+}
+
+/* ── TABS ── */
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('.tab-nav-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.tab-nav-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById(`tab-${btn.dataset.tab}`).classList.add('active');
+    });
+  });
+});
+
+function switchToReviews(e) {
+  e.preventDefault();
+  document.querySelectorAll('.tab-nav-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+  document.querySelector('[data-tab="reviews"]').classList.add('active');
+  document.getElementById('tab-reviews').classList.add('active');
+  setTimeout(() => document.getElementById('tab-reviews').scrollIntoView({ behavior: 'smooth', block: 'start' }), 50);
+}
+
+/* ── TOAST ── */
+function showToast(msg, type = 'success') {
+  const t = document.getElementById('toast');
+  t.querySelector('i').className = type === 'error' ? 'fas fa-exclamation-circle' : 'fas fa-check-circle';
+  t.className = `toast ${type}`;
+  document.getElementById('toastMsg').textContent = msg;
+  t.classList.add('show');
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => t.classList.remove('show'), 3500);
+}
+</script>
+</body>
+</html>

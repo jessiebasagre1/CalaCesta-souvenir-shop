@@ -323,7 +323,7 @@
 
     /* ── DESCRIPTION TAB ── */
     .description-body { max-width: 720px; }
-    .description-body p { color: var(--muted); line-height: 1.85; margin-bottom: 1rem; font-size: .96rem;}
+    .description-body p { color: var(--muted); line-height: 1.85; margin-bottom: 1rem; font-size: .96rem; }
     .spec-table { width: 100%; border-collapse: collapse; margin-top: 2rem; }
     .spec-table tr:first-child td { padding-top: .75rem; }
     .spec-table tr { border-bottom: 1px solid var(--sand-light); }

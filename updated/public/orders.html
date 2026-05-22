@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Orders - Cala-Cesta</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/nav.css">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <!-- ─── NAVBAR ─────────────────────────────────────────── -->
+<header>
+  <div class="nav-container">
+    <a href="index.html" class="logo"><i class="fas fa-gift"></i> Cala-Cesta</a>
+
+    <nav class="nav-links">
+      <a href="index.html"><i class="fas fa-home"></i> Home</a>
+      <a href="index.html#featured-shops"><i class="fas fa-store"></i> Shops</a>
+      <a href="index.html#featured-products"><i class="fas fa-tag"></i> Products</a>
+      <a href="orders.html"><i class="fas fa-box"></i> Orders</a>
+    </nav>
+
+    <div class="nav-right">
+      <div class="auth-section" id="authSection">
+        <!-- Dynamic auth buttons/menu -->
+      </div>
+  </div>
+</header>
+<!------------------------------------------------------------------------>
+
+  <div class="container dashboard" style="padding: 3rem 0;">
+    <div class="dashboard-header">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <h1><i class="fas fa-list"></i> My Orders</h1>
+        <div>
+          <select id="statusFilter" onchange="filterOrders()" style="padding: 0.75rem; border: 2px solid var(--light-brown); border-radius: 12px; background: white;">
+            <option value="">All Statuses</option>
+            <option value="pending">Pending</option>
+            <option value="confirmed">Confirmed</option>
+            <option value="shipped">Shipped</option>
+            <option value="delivered">Delivered</option>
+            <option value="cancelled">Cancelled</option>
+          </select>
+        </div>
+      </div>
+      <p id="ordersSummary">Loading orders...</p>
+    </div>
+
+    <div id="ordersList" class="grid">
+      <!-- Orders loaded here -->
+    </div>
+
+    <div id="noOrders" style="display: none; grid-column: 1 / -1; text-align: center; padding: 6rem 2rem;">
+      <i class="fas fa-shopping-bag" style="font-size: 5rem; color: var(--light-brown); margin-bottom: 2rem;"></i>
+      <h2>No Orders Yet</h2>
+      <p>You haven't placed any orders. Start shopping to see your order history!</p>
+      <a href="index.html" class="btn btn-primary" style="font-size: 1.1rem;">Start Shopping</a>
+    </div>
+  </div>
+
+  <!-- Order Details Modal -->
+  <div id="orderModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10000;">
+    <div style="background: white; margin: 5% auto; padding: 2rem; border-radius: 20px; max-width: 700px; max-height: 85vh; overflow-y: auto;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+        <h2 id="modalTitle">Order Details</h2>
+        <button onclick="closeModal()" style="background: none; border: none; font-size: 2rem; cursor: pointer; color: #999;">×</button>
+      </div>
+      <div id="modalContent"></div>
+    </div>
+  </div>
+
+  <script src="js/auth.js"></script>
+  <script>
+    window.addEventListener('load', async () => {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        window.location.href = 'login.html';
+        return;
+      }
+      await loadOrders();
+    });
+
+    let allOrders = [];
+
+    async function loadOrders() {
+      try {
+        const token = localStorage.getElementById('token');
+        const response = await fetch('/api/customer/orders', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        allOrders = await response.json();
+        renderOrders(allOrders);
+        updateOrdersSummary();
+      } catch (error) {
+        console.error('Orders load error:', error);
+        document.getElementById('noOrders').style.display = 'block';
+      }
+    }
+
+    function renderOrders(orders) {
+      const container = document.getElementById('ordersList');
+      
+      if (orders.length === 0) {
+        document.getElementById('noOrders').style.display = 'block';
+        container.style.display = 'none';
+        return;
+      }
+      
+      document.getElementById('noOrders').style.display = 'none';
+      container.style.display = 'grid';
+      
+      container.innerHTML = orders.map(order => {
+        const statusColor = {
+          'pending': '#ffc107', 'confirmed': '#28a745', 'shipped': '#007bff',
+          'delivered': '#28a745', 'cancelled': '#dc3545'
+        }[order.status];
+        
+        return `
+          <div class="card order-card" onclick="showOrderDetails('${order._id}')" style="cursor: pointer;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <div>
+                <h3>Order #${order._id.slice(-6).toUpperCase()}</h3>
+                <p style="color: #666;">Placed: ${new Date(order.createdAt).toLocaleString()}</p>
+                ${order.shippingAddress ? `<p><strong>Shipping:</strong> ${order.shippingAddress}</p>` : ''}
+              </div>
+              <div style="text-align: right;">
+                <span class="status-badge" style="background: ${statusColor}; color: white; padding: 0.5rem 1rem; border-radius: 25px; font-weight: bold; display: inline-block;">
+                  ${order.status.toUpperCase()}
+                </span>
+                <div style="font-weight: bold; color: var(--orange); font-size: 1.5rem; margin-top: 0.5rem;">
+                  $${order.total.toFixed(2)}
+                </div>
+                ${order.trackingNumber ? `
+                  <div style="margin-top: 0.5rem;">
+                    <span style="font-size: 0.85rem; color: #007bff;">Tracking: ${order.trackingNumber}</span>
+                  </div>
+                ` : ''}
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function filterOrders() {
+      const status = document.getElementById('statusFilter').value;
+      const filtered = status 
+        ? allOrders.filter(order => order.status === status)
+        : allOrders;
+      renderOrders(filtered);
+    }
+
+    function updateOrdersSummary() {
+      const totalOrders = allOrders.length;
+      const deliveredOrders = allOrders.filter(o => o.status === 'delivered').length;
+      const totalSpent = allOrders.reduce((sum, order) => sum + order.total, 0);
+      
+      document.getElementById('ordersSummary').textContent = 
+        `${totalOrders} total orders • ${deliveredOrders} delivered • $${totalSpent.toFixed(2)} spent`;
+    }
+
+    function showOrderDetails(orderId) {
+      const order = allOrders.find(o => o._id === orderId);
+      if (!order) return;
+      
+      document.getElementById('modalTitle').textContent = `Order #${order._id.slice(-6)}`;
+      
+      const statusColor = {
+        'pending': '#ffc107', 'confirmed': '#28a745', 'shipped': '#007bff',
+        'delivered': '#28a745', 'cancelled': '#dc3545'
+      }[order.status];
+      
+      document.getElementById('modalContent').innerHTML = `
+        <div style="background: #f8f9fa; padding: 1.5rem; border-radius: 12px; margin-bottom: 1.5rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h4>Order Details</h4>
+            <span class="status-badge" style="background: ${statusColor}; color: white; padding: 0.5rem 1rem; border-radius: 20px;">
+              ${order.status.toUpperCase()}
+            </span>
+          </div>
+          <p><strong>Date:</strong> ${new Date(order.createdAt).toLocaleString()}</p>
+          ${order.shippingAddress ? `<p><strong>Shipping Address:</strong> ${order.shippingAddress}</p>` : ''}
+          ${order.trackingNumber ? `<p><strong>Tracking:</strong> ${order.trackingNumber}</p>` : ''}
+          <p style="font-size: 1.5rem; font-weight: bold; color: var(--orange); margin-top: 1rem;">
+            Total: $${order.total.toFixed(2)}
+          </p>
+        </div>
+        
+        <h5>Order Items (${order.items.length}):</h5>
+        <div style="max-height: 400px; overflow-y: auto; margin-bottom: 1.5rem;">
+          ${order.items.map(item => `
+            <div style="display: flex; gap: 1rem; padding: 1rem; background: white; margin-bottom: 0.75rem; border-radius: 12px; border-left: 3px solid var(--light-brown);">
+              <div style="width: 70px; height: 70px; background-size: cover; background-image: url('${item.product.image}'); border-radius: 8px;"></div>
+              <div style="flex: 1;">
+                <h6 style="margin: 0 0 0.25rem 0;">${item.productName}</h6>
+                <p style="margin: 0 0 0.5rem 0; color: #666;">Shop: ${item.shopId}</p>
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                  <span style="font-weight: bold;">Qty: ${item.quantity}</span>
+                  <span style="font-weight: bold; color: var(--orange);">$${(item.quantity * item.price).toFixed(2)}</span>
+                </div>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+        
+        <div style="text-align: center; padding: 1.5rem; background: #f8f9fa; border-radius: 12px;">
+          <h4 style="margin-top: 0;">Order Total: <span style="color: var(--orange); font-size: 1.8rem;">$${order.total.toFixed(2)}</span></h4>
+          ${order.status === 'delivered' ? '<p style="color: #28a745; font-size: 1.1rem;"><i class="fas fa-check-circle"></i> Order Delivered Successfully!</p>' : ''}
+        </div>
+      `;
+      
+      document.getElementById('orderModal').style.display = 'block';
+    }
+
+    function closeModal() {
+      document.getElementById('orderModal').style.display = 'none';
+    }
+
+    // Close modal on outside click
+    document.getElementById('orderModal').addEventListener('click', (e) => {
+      if (e.target === document.getElementById('orderModal')) {
+        closeModal();
+      }
+    });
+  </script>
+</body>
+</html>

@@ -207,48 +207,12 @@ router.get('/notifications', async (req, res) => {
 
 // ── Products ─────────────────────────────────────────────────────────────────
 
-// GET /api/business/products?search=&category=&status=&stock=&sort=
+// GET /api/business/products
 router.get('/products', async (req, res) => {
   try {
     const ctx = await getBusiness(req, res);
     if (!ctx) return;
-
-    const { search, category, status, stock, sort } = req.query;
-
-    const query = { businessId: ctx.business._id };
-
-    // Search by name or description
-    if (search && search.trim()) {
-      query.$or = [
-        { name:        { $regex: search.trim(), $options: 'i' } },
-        { description: { $regex: search.trim(), $options: 'i' } },
-        { category:    { $regex: search.trim(), $options: 'i' } },
-      ];
-    }
-
-    // Filter by category
-    if (category && category !== 'all') {
-      query.category = { $regex: `^${category}$`, $options: 'i' };
-    }
-
-    // Filter by status
-    if (status && status !== 'all') {
-      query.status = status;
-    }
-
-    // Filter by stock level
-    if (stock === 'zero')     query.stock = 0;
-    else if (stock === 'low') query.stock = { $gt: 0, $lt: 10 };
-    else if (stock === 'ok')  query.stock = { $gte: 10 };
-
-    // Sort
-    let sortObj = { createdAt: -1 }; // default: newest
-    if (sort === 'price_asc')   sortObj = { price: 1 };
-    else if (sort === 'price_desc') sortObj = { price: -1 };
-    else if (sort === 'name_asc')   sortObj = { name: 1 };
-    else if (sort === 'stock_asc')  sortObj = { stock: 1 };
-
-    const products = await Product.find(query).sort(sortObj).lean();
+    const products = await Product.find({ businessId: ctx.business._id }).sort({ createdAt: -1 }).lean();
     res.json(products);
   } catch (error) {
     res.status(500).json({ message: error.message });

@@ -222,4 +222,63 @@ router.post('/checkout', async (req, res) => {
   }
 });
 
+// GET /api/categories  – distinct categories from active products with counts
+router.get('/categories', async (req, res) => {
+  try {
+    const agg = await Product.aggregate([
+      { $match: { status: 'active', stock: { $gt: 0 }, category: { $exists: true, $ne: null, $ne: '' } } },
+      { $group: { _id: '$category', count: { $sum: 1 } } },
+      { $sort: { count: -1 } },
+    ]);
+    const categories = agg.map(c => ({ name: c._id, count: c.count }));
+    res.json(categories);
+  } catch (error) {
+    res.status(500).json({ message: error.message, categories: [] });
+  }
+});
+
+// GET /api/products-search?q=...&category=...&sort=...&page=...
+router.get('/products-search', async (req, res) => {
+  try {
+    const { q, category, sort = 'newest', page = 1, limit = 24 } = req.query;
+    const match = { status: 'active', stock: { $gt: 0 } };
+
+    if (q && q.trim()) {
+      match.$or = [
+        { name: { $regex: q.trim(), $options: 'i' } },
+        { description: { $regex: q.trim(), $options: 'i' } },
+        { category: { $regex: q.trim(), $options: 'i' } },
+      ];
+    }
+    if (category && category !== 'all') {
+      match.category = { $regex: new RegExp(`^${category}$`, 'i') };
+    }
+
+    const sortMap = {
+      newest:     { createdAt: -1 },
+      'price-low':  { price: 1 },
+      'price-high': { price: -1 },
+      name:       { name: 1 },
+      rating:     { avgRating: -1 },
+    };
+    const sortObj = sortMap[sort] || { createdAt: -1 };
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+
+    const [products, total] = await Promise.all([
+      Product.find(match).populate('businessId', 'businessName name').sort(sortObj).skip(skip).limit(parseInt(limit)).lean(),
+      Product.countDocuments(match),
+    ]);
+
+    const ratingsMap = await attachRatings(products);
+    res.json({
+      products: products.map(p => formatProduct(p, ratingsMap)),
+      total,
+      page: parseInt(page),
+      pages: Math.ceil(total / parseInt(limit)),
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message, products: [], total: 0 });
+  }
+});
+
 module.exports = router;

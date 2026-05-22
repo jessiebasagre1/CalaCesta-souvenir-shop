@@ -84,7 +84,7 @@ function showToast(msg) {
   t._timer = setTimeout(() => { t.style.opacity='0'; t.style.transform='translateY(16px)'; }, 3000);
 }
 
-/* ── RENDER PRODUCT CARD ── */
+/* ── RENDER PRODUCT CARD (with clickable link to product.html) ── */
 function renderProductCard(product, badgeType = 'none') {
   const badges = {
     hot:  `<div class="badge badge-hot"><i class="fas fa-fire"></i> Hot</div>`,
@@ -93,26 +93,17 @@ function renderProductCard(product, badgeType = 'none') {
     sale: `<div class="badge badge-sale"><i class="fas fa-tag"></i> Sale</div>`,
     none: ''
   };
-
-  // Use effective badge: if product.isOnSale, force 'sale' badge
-  const effectiveBadge = (product.isOnSale && badgeType !== 'none') ? 'sale' : badgeType;
-
   const stockHtml = product.stock <= 5 && product.stock > 0
     ? `<div class="stock-low"><i class="fas fa-exclamation-circle"></i>Only ${product.stock} left!</div>` : '';
-
-  // Show original price crossed out if on sale
-  const oldPrice = (effectiveBadge === 'sale' || product.isOnSale) && product.originalPrice && product.originalPrice > product.price
-    ? `<span class="product-price-old">₱${product.originalPrice.toFixed(0)}</span>`
-    : effectiveBadge === 'sale' && !product.isOnSale
-      ? `<span class="product-price-old">₱${(product.price * 1.2).toFixed(0)}</span>`
-      : '';
-
+  const oldPrice = badgeType === 'sale'
+    ? `<span class="product-price-old">₱${(product.price * 1.2).toFixed(0)}</span>` : '';
   const outOfStock = product.stock === 0
     ? `<div class="out-of-stock-overlay"><span>OUT OF STOCK</span></div>` : '';
   const cartBtn = product.stock > 0
     ? `<button class="add-cart-btn" onclick="event.stopPropagation();addToCart('${product.id}','${(product.name||'').replace(/'/g,"\\'")}',${product.price},'${product.image}','${product.shopId}')" title="Add to cart"><i class="fas fa-cart-plus"></i></button>`
     : `<button class="add-cart-btn" disabled style="opacity:.4;cursor:not-allowed"><i class="fas fa-ban"></i></button>`;
 
+  // Rating display
   const avg = product.rating || product.avgRating || 0;
   const count = product.reviewCount || 0;
   const starsHtml = avg > 0
@@ -126,7 +117,7 @@ function renderProductCard(product, badgeType = 'none') {
     <div class="product-card" style="cursor:pointer" onclick="window.location.href='product.html?id=${pid}'">
       <div class="product-img-wrap">
         <img src="${product.image}" alt="${product.name}" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1608043152266-119cb09fc56e?w=400&fit=crop'">
-        ${badges[effectiveBadge] || ''}
+        ${badges[badgeType]}
         ${outOfStock}
         <button class="wishlist-btn" onclick="event.stopPropagation();toggleWishlist(this)" title="Add to wishlist"><i class="far fa-heart"></i></button>
       </div>
@@ -155,26 +146,8 @@ function toggleWishlist(btn) {
   btn.style.color = icon.classList.contains('fas') ? 'var(--terracotta)' : '';
 }
 
-/* ── LOADING SKELETON ── */
-function showProductsSkeleton(containerId, count = 4) {
-  const el = document.getElementById(containerId);
-  if (!el) return;
-  el.innerHTML = Array(count).fill(`
-    <div class="product-card" style="pointer-events:none">
-      <div class="product-img-wrap" style="background:#e8ddd5;animation:pulse 1.5s infinite;min-height:200px;border-radius:12px 12px 0 0;"></div>
-      <div class="product-body">
-        <div style="height:12px;background:#e8ddd5;border-radius:4px;margin-bottom:8px;animation:pulse 1.5s infinite;"></div>
-        <div style="height:16px;background:#e8ddd5;border-radius:4px;margin-bottom:8px;animation:pulse 1.5s infinite;width:75%;"></div>
-        <div style="height:20px;background:#e8ddd5;border-radius:4px;animation:pulse 1.5s infinite;width:40%;"></div>
-      </div>
-    </div>`).join('');
-}
-
-/* ── LOAD FEATURED CONTENT (initial page load) ── */
+/* ── LOAD FEATURED CONTENT ── */
 async function loadFeaturedContent() {
-  showProductsSkeleton('featuredProducts', 6);
-  showProductsSkeleton('hotProducts', 4);
-
   try {
     const res = await fetch('/api/featured');
     const data = await res.json();
@@ -251,88 +224,127 @@ function subscribeNewsletter() {
   document.getElementById('emailInput').value = '';
 }
 
-/* ── TABS – connected to real backend endpoints ── */
+/* ── TABS ── */
+const TAB_CONFIG = {
+  featured:      { url: '/api/featured',               key: 'products', badges: ['top','new','none','sale','none','none'] },
+  'top-selling': { url: '/api/products-top-selling',   key: null,       badges: ['top','top','top','top','top','top'] },
+  'new-arrivals':{ url: '/api/products-new-arrivals',  key: null,       badges: ['new','new','new','new','new','new'] },
+  sale:          { url: '/api/products-on-sale',       key: null,       badges: ['sale','sale','sale','sale','sale','sale'] },
+};
+
+async function loadTab(tab) {
+  const el = document.getElementById('featuredProducts');
+  el.innerHTML = `<div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Loading…</p></div>`;
+
+  try {
+    const cfg = TAB_CONFIG[tab] || TAB_CONFIG.featured;
+    const res  = await fetch(cfg.url);
+    const data = await res.json();
+    const products = cfg.key ? (data[cfg.key] || []) : (Array.isArray(data) ? data : []);
+
+    if (!products.length) {
+      el.innerHTML = `<div class="empty-state"><i class="fas fa-box-open"></i><h3>Nothing here yet</h3><p>Check back soon!</p></div>`;
+      return;
+    }
+    el.innerHTML = products.slice(0, 6).map((p, i) =>
+      renderProductCard(p, cfg.badges[i % cfg.badges.length])
+    ).join('');
+  } catch {
+    el.innerHTML = `<div class="empty-state"><i class="fas fa-box-open"></i><h3>Failed to load</h3><p>Please refresh.</p></div>`;
+  }
+}
+
 document.querySelectorAll('.tab-btn').forEach(btn => {
-  btn.addEventListener('click', async function() {
+  btn.addEventListener('click', function () {
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
     this.classList.add('active');
-    const tab = this.dataset.tab;
-    const el = document.getElementById('featuredProducts');
-
-    showProductsSkeleton('featuredProducts', 6);
-
-    try {
-      let products = [];
-
-      if (tab === 'featured') {
-        const res = await fetch('/api/featured');
-        const data = await res.json();
-        products = data.products || [];
-        const badges = ['top','new','none','sale','none','none'];
-        el.innerHTML = products.length
-          ? products.slice(0,6).map((p,i) => renderProductCard(p, badges[i % badges.length])).join('')
-          : `<div class="empty-state"><i class="fas fa-box-open"></i><h3>No Products Yet</h3><p>Check back soon!</p></div>`;
-
-      } else if (tab === 'top-selling') {
-        const res = await fetch('/api/products-top-selling');
-        products = await res.json();
-        el.innerHTML = products.length
-          ? products.map(p => renderProductCard(p, 'top')).join('')
-          : `<div class="empty-state"><i class="fas fa-trophy"></i><h3>No Sales Data Yet</h3><p>Top selling products will appear here once orders are placed.</p></div>`;
-
-      } else if (tab === 'new-arrivals') {
-        const res = await fetch('/api/products-new-arrivals');
-        products = await res.json();
-        el.innerHTML = products.length
-          ? products.map(p => renderProductCard(p, 'new')).join('')
-          : `<div class="empty-state"><i class="fas fa-sparkles"></i><h3>No New Arrivals</h3><p>New products will appear here.</p></div>`;
-
-      } else if (tab === 'sale') {
-        const res = await fetch('/api/products-on-sale');
-        products = await res.json();
-        el.innerHTML = products.length
-          ? products.map(p => renderProductCard(p, 'sale')).join('')
-          : `<div class="empty-state"><i class="fas fa-tag"></i><h3>No Sale Items</h3><p>No products are currently on sale. Check back later!</p></div>`;
-      }
-    } catch {
-      el.innerHTML = `<div class="empty-state"><i class="fas fa-exclamation-circle"></i><h3>Failed to load</h3><p>Please try again.</p></div>`;
-    }
+    loadTab(this.dataset.tab);
   });
 });
 
-/* ── CATEGORIES – filter products by backend category ── */
-document.querySelectorAll('.category-pill').forEach(pill => {
-  pill.addEventListener('click', async e => {
-    e.preventDefault();
-    document.querySelectorAll('.category-pill').forEach(p => p.classList.remove('active'));
-    pill.classList.add('active');
+/* ── CATEGORIES ── */
+const CATEGORY_ICONS = {
+  default: 'fa-tag',
+  food: 'fa-cookie', fruits: 'fa-apple-alt', vegetables: 'fa-carrot',
+  clothing: 'fa-tshirt', clothes: 'fa-tshirt', fashion: 'fa-tshirt',
+  jewelry: 'fa-gem', jewellery: 'fa-gem', accessories: 'fa-ring',
+  crafts: 'fa-hands', handcraft: 'fa-hands', handicraft: 'fa-hands',
+  art: 'fa-palette', artwork: 'fa-palette', painting: 'fa-paint-brush',
+  decor: 'fa-home', decoration: 'fa-home', furniture: 'fa-couch',
+  collectibles: 'fa-trophy', antiques: 'fa-history',
+  toys: 'fa-gamepad', games: 'fa-gamepad',
+  beauty: 'fa-spa', wellness: 'fa-spa', skincare: 'fa-spa',
+  electronics: 'fa-microchip', gadgets: 'fa-microchip',
+  books: 'fa-book', stationery: 'fa-pencil-alt',
+  bags: 'fa-shopping-bag', shoes: 'fa-shoe-prints',
+  plants: 'fa-seedling', garden: 'fa-leaf',
+  souvenirs: 'fa-gift', gifts: 'fa-gift',
+};
 
-    const cat = pill.dataset.cat || 'all';
+function getCategoryIcon(name) {
+  const key = (name || '').toLowerCase().trim();
+  for (const [k, icon] of Object.entries(CATEGORY_ICONS)) {
+    if (key.includes(k)) return icon;
+  }
+  return CATEGORY_ICONS.default;
+}
 
-    // Reset tabs to Featured
-    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-    document.querySelector('.tab-btn[data-tab="featured"]')?.classList.add('active');
+async function loadCategories() {
+  try {
+    const res = await fetch('/api/categories');
+    const categories = await res.json();
+    const grid = document.getElementById('categoriesGrid');
+    if (!grid) return;
 
-    showProductsSkeleton('featuredProducts', 6);
-    document.getElementById('top-products').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    const allPill = `<a href="products.html" class="category-pill active" data-cat="all">
+        <i class="fas fa-th-large"></i>
+        <span>All Products</span>
+      </a>`;
 
-    try {
-      const res = await fetch(`/api/products-by-category?category=${encodeURIComponent(cat)}`);
-      const products = await res.json();
-      const el = document.getElementById('featuredProducts');
-      const categoryLabel = pill.querySelector('span')?.textContent || cat;
+    const pills = categories.map(c => {
+      const icon = getCategoryIcon(c.name);
+      const encoded = encodeURIComponent(c.name);
+      return `<a href="products.html?category=${encoded}" class="category-pill" data-cat="${c.name}">
+        <i class="fas ${icon}"></i>
+        <span>${c.name}</span>
+        <em style="font-style:normal;font-size:.72rem;opacity:.65;display:block;margin-top:2px">${c.count}</em>
+      </a>`;
+    });
 
-      if (!products.length) {
-        el.innerHTML = `<div class="empty-state"><i class="fas fa-box-open"></i><h3>No ${categoryLabel} Products</h3><p>No products found in this category. Check back soon!</p></div>`;
-        return;
-      }
-
-      const badges = ['top','new','none','sale','none','none'];
-      el.innerHTML = products.map((p, i) => renderProductCard(p, badges[i % badges.length])).join('');
-    } catch {
-      const el = document.getElementById('featuredProducts');
-      el.innerHTML = `<div class="empty-state"><i class="fas fa-exclamation-circle"></i><h3>Failed to load</h3><p>Please try again.</p></div>`;
+    if (pills.length === 0) {
+      // Fallback: show default categories linking to products page
+      const defaults = [
+        { cat: 'Handcrafts', icon: 'fa-hands' },
+        { cat: 'Clothing', icon: 'fa-tshirt' },
+        { cat: 'Jewelry', icon: 'fa-gem' },
+        { cat: 'Food', icon: 'fa-cookie' },
+        { cat: 'Art', icon: 'fa-palette' },
+        { cat: 'Home Decor', icon: 'fa-home' },
+        { cat: 'Collectibles', icon: 'fa-trophy' },
+        { cat: 'Souvenirs', icon: 'fa-gift' },
+      ];
+      grid.innerHTML = allPill + defaults.map(d =>
+        `<a href="products.html?category=${encodeURIComponent(d.cat)}" class="category-pill" data-cat="${d.cat}">
+          <i class="fas ${d.icon}"></i><span>${d.cat}</span></a>`
+      ).join('');
+    } else {
+      grid.innerHTML = allPill + pills.join('');
     }
+
+    // Category pills just navigate to products page
+    grid.querySelectorAll('.category-pill').forEach(pill => {
+      pill.addEventListener('click', e => {
+        // Let navigation happen naturally (they are <a> tags)
+      });
+    });
+  } catch {
+    // silently fail — fallback HTML already in place
+  }
+}
+
+document.querySelectorAll('.category-pill').forEach(pill => {
+  pill.addEventListener('click', e => {
+    // These are now navigation links — no need to preventDefault
   });
 });
 
@@ -347,15 +359,10 @@ const observer = new IntersectionObserver(entries => {
 }, { threshold: .1 });
 document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
 
-/* ── ADD PULSE ANIMATION ── */
-const style = document.createElement('style');
-style.textContent = `@keyframes pulse { 0%,100% { opacity:1 } 50% { opacity:.4 } }`;
-document.head.appendChild(style);
-
 /* ── INIT ── */
 document.addEventListener('DOMContentLoaded', async () => {
   await loadAuthState();
-  await loadFeaturedContent();
+  await Promise.all([loadFeaturedContent(), loadCategories()]);
   setTimeout(() => {
     document.querySelectorAll('.reveal:not(.visible)').forEach(el => observer.observe(el));
   }, 500);
