@@ -882,24 +882,6 @@
       animation: spin 0.7s linear infinite;
       display: inline-block;
     }
-    /* ─── RESPONSIVE ─── */
-    @media (max-width: 900px) {
-      .sidebar { width: 60px; }
-      .sidebar .logo-mark span, .sidebar .logo-sub, .sidebar .nav-item span,
-      .sidebar .nav-section-label, .sidebar-bottom .shop-badge,
-      .sidebar .btn-logout span { display: none; }
-      .nav-item { justify-content: center; padding: 12px; }
-      .main { margin-left: 60px; }
-      .stats-strip { grid-template-columns: 1fr 1fr; }
-      .analytics-grid { grid-template-columns: 1fr; }
-    }
-
-    @media (max-width: 600px) {
-      .content { padding: 16px; }
-      .stats-strip { grid-template-columns: 1fr; }
-      .topbar { padding: 14px 16px; }
-    }
-
     /* ─── ANIMATIONS ─── */
     .section.active .stat-card,
     .section.active .card,
@@ -920,3 +902,823 @@
 
     .empty-state i { font-size: 48px; margin-bottom: 16px; opacity: 0.3; }
     .empty-state p { font-size: 15px; }
+
+/* ─────────────────────────────────────────────────────────────
+   0. GLOBAL RESETS FOR MOBILE SAFETY
+   Prevents horizontal overflow anywhere on the page.
+   ───────────────────────────────────────────────────────────── */
+*, *::before, *::after {
+  -webkit-tap-highlight-color: transparent; /* remove blue flash on iOS tap */
+}
+ 
+html, body {
+  overflow-x: hidden; /* prevent horizontal scroll on all screens */
+  max-width: 100vw;
+}
+ 
+/* Relative units for font scaling */
+html { font-size: 15px; }
+ 
+img, video, canvas {
+  max-width: 100%;
+  height: auto;
+}
+ 
+/* Ensure all buttons are tap-friendly (min 44px touch target) */
+button, .btn, .btn-sm, .nav-item, .icon-btn, .notif-clear,
+.chart-tab, .inv-filter {
+  touch-action: manipulation;
+}
+ 
+ 
+/* ─────────────────────────────────────────────────────────────
+   1. SIDEBAR — Responsive collapse
+   
+   PROBLEM: Fixed 240px sidebar and matching margin-left on .main
+   causes severe layout breaks on phones. The existing 60px
+   collapse at 900px still leaves the main content too cramped.
+   
+   FIX: Full-width overlay sidebar on mobile with a hamburger
+   toggle. A backdrop closes it on tap-outside.
+   ───────────────────────────────────────────────────────────── */
+ 
+/* Hamburger toggle button — hidden on desktop */
+.sidebar-hamburger {
+  display: none;
+  position: fixed;
+  top: 14px;
+  left: 14px;
+  z-index: 400;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: var(--orange, #c2612a);
+  color: #fff;
+  border: none;
+  font-size: 16px;
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.18);
+  transition: background 0.2s;
+}
+.sidebar-hamburger:hover { background: #a0522d; }
+ 
+/* Sidebar backdrop overlay for mobile */
+.sidebar-backdrop {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
+  z-index: 99;
+  backdrop-filter: blur(2px);
+}
+.sidebar-backdrop.open { display: block; }
+ 
+ 
+/* ─────────────────────────────────────────────────────────────
+   2. TOPBAR
+   
+   PROBLEM: flex row with page title + actions overflows on
+   screens < 400px. "Add Product" button can clip.
+   
+   FIX: Let it wrap; reduce padding; shrink font on tiny screens.
+   ───────────────────────────────────────────────────────────── */
+@media (max-width: 600px) {
+  .topbar {
+    padding: 12px 16px;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+ 
+  .page-title {
+    font-size: 20px;
+  }
+ 
+  .topbar-actions {
+    gap: 8px;
+  }
+ 
+  /* Shrink "Add Product" button text on very small screens */
+  .topbar-actions .btn-primary span,
+  .topbar-actions .btn-primary {
+    font-size: 12px;
+    padding: 7px 12px;
+  }
+}
+ 
+ 
+/* ─────────────────────────────────────────────────────────────
+   3. MAIN CONTENT AREA
+   
+   PROBLEM: margin-left: 240px is never removed on mobile, 
+   leaving almost no usable width on phones.
+   
+   FIX: Remove margin on mobile; sidebar becomes an overlay.
+   ───────────────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  /* Full-width content; sidebar is now an overlay */
+  .main {
+    margin-left: 0 !important;
+    width: 100%;
+  }
+ 
+  /* Show the hamburger */
+  .sidebar-hamburger {
+    display: flex;
+  }
+ 
+  /* Sidebar slides in from the left as a drawer */
+  .sidebar {
+    transform: translateX(-100%);
+    transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 200;
+    width: 260px !important;
+    box-shadow: 4px 0 32px rgba(0,0,0,0.25);
+  }
+ 
+  /* JS adds .open to .sidebar to slide it in */
+  .sidebar.open {
+    transform: translateX(0);
+  }
+ 
+  /* Restore all text hidden by the existing 60px collapse */
+  .sidebar .logo-mark span,
+  .sidebar .logo-sub,
+  .sidebar .nav-item span,
+  .sidebar .nav-section-label,
+  .sidebar-bottom .shop-badge,
+  .sidebar .btn-logout span {
+    display: unset !important;
+  }
+ 
+  .nav-item {
+    justify-content: flex-start;
+    padding: 11px 14px;
+  }
+ 
+  /* Push topbar down to avoid hamburger overlap */
+  .topbar {
+    padding-left: 64px; /* room for hamburger button */
+  }
+ 
+  .content {
+    padding: 20px 16px;
+  }
+}
+ 
+ 
+/* ─────────────────────────────────────────────────────────────
+   4. STATS STRIP (OVERVIEW KPIs)
+   
+   PROBLEM: repeat(4, 1fr) creates 4 columns that squeeze 
+   to ~80px each on phones — unreadable.
+   
+   FIX: 2-col on tablets, 2-col on phones (numbers are large 
+   enough), single col if needed.
+   ───────────────────────────────────────────────────────────── */
+@media (max-width: 900px) {
+  .stats-strip {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+}
+ 
+@media (max-width: 400px) {
+  .stats-strip {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+ 
+  .stat-number {
+    font-size: 28px;
+  }
+}
+ 
+ 
+/* ─────────────────────────────────────────────────────────────
+   5. OVERVIEW SECTION — 2-column grid
+   
+   PROBLEM: grid-template-columns: 2fr 1fr is hardcoded inline.
+   Stacks poorly on mobile.
+   ───────────────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  /* The inline style grid on the overview section */
+  #overview-section > div[style*="grid-template-columns"] {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 16px !important;
+  }
+}
+ 
+ 
+/* ─────────────────────────────────────────────────────────────
+   6. ANALYTICS KPI ROW
+   
+   PROBLEM: repeat(4, 1fr) same as stats-strip — breaks mobile.
+   ───────────────────────────────────────────────────────────── */
+@media (max-width: 900px) {
+  .analytics-kpi-row {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+}
+ 
+@media (max-width: 480px) {
+  .analytics-kpi-row {
+    grid-template-columns: 1fr;
+  }
+ 
+  .kpi-value {
+    font-size: 22px;
+  }
+}
+ 
+ 
+/* ─────────────────────────────────────────────────────────────
+   7. ANALYTICS ROWS (Chart + sidebar)
+   
+   PROBLEM: 2fr 1fr and 1fr 1fr grids don't stack.
+   Already partially handled but needs phone breakpoint too.
+   ───────────────────────────────────────────────────────────── */
+@media (max-width: 900px) {
+  .analytics-row,
+  .analytics-row2 {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+}
+ 
+ 
+/* ─────────────────────────────────────────────────────────────
+   8. CHART WRAPS
+   
+   PROBLEM: Fixed height (260px, 220px) can cause overflow or 
+   charts become too small on narrow screens.
+   
+   FIX: Use min-height with responsive reduction.
+   ───────────────────────────────────────────────────────────── */
+@media (max-width: 600px) {
+  .chart-wrap {
+    height: 220px !important;
+  }
+ 
+  .chart-wrap-sm {
+    height: 180px !important;
+  }
+}
+ 
+ 
+/* ─────────────────────────────────────────────────────────────
+   9. CARD HEADERS & BODIES
+   
+   PROBLEM: Padding is generous on desktop, compresses content
+   on small screens. Card-headers with space-between can 
+   push actions off-screen.
+   ───────────────────────────────────────────────────────────── */
+@media (max-width: 600px) {
+  .card-header {
+    padding: 14px 16px 12px;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+ 
+  .card-title {
+    font-size: 16px;
+  }
+ 
+  .card-body {
+    padding: 16px;
+  }
+ 
+  /* Chart tabs wrap below title on small screens */
+  .chart-tabs {
+    width: 100%;
+    justify-content: center;
+  }
+}
+ 
+ 
+/* ─────────────────────────────────────────────────────────────
+   10. INVENTORY TABLE
+   
+   PROBLEM: Wide table (8 columns) with inline controls overflows
+   on any mobile screen. The inv-table-wrap has overflow-x: auto
+   but the wrapper itself needs a max-width constraint and the
+   toolbar needs to stack.
+   ───────────────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  /* Toolbar stacks vertically */
+  .inv-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+ 
+  .inv-search {
+    min-width: unset;
+    width: 100%;
+  }
+ 
+  .inv-filter {
+    width: 100%;
+  }
+ 
+  /* Table scrolls horizontally; content stays intact */
+  .inv-table-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    border-radius: 12px;
+  }
+ 
+  table.inv-table {
+    min-width: 700px; /* forces scroll rather than squish */
+    font-size: 12px;
+  }
+ 
+  table.inv-table th,
+  table.inv-table td {
+    padding: 10px 10px;
+  }
+ 
+  /* Inline stock input slightly smaller */
+  .inline-qty {
+    width: 56px;
+    font-size: 12px;
+  }
+ 
+  /* Inventory footer summary stacks */
+  #inventory-section .card > div[style*="display:flex"] {
+    flex-direction: column;
+    gap: 4px;
+    padding: 10px 14px;
+  }
+}
+ 
+@media (max-width: 480px) {
+  /* On very small phones, hide description column to reduce table width */
+  .inv-desc { display: none; }
+  .inv-img  { width: 32px; height: 32px; }
+  .inv-img-placeholder { width: 32px; height: 32px; }
+}
+ 
+ 
+/* ─────────────────────────────────────────────────────────────
+   11. ORDERS TABLE
+   
+   PROBLEM: 6-column orders table overflows with no scroll.
+   ───────────────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  /* The existing overflow-x:auto div wrapping the table already 
+     exists in HTML; just ensure the table has a min-width */
+  .orders-table {
+    min-width: 600px;
+  }
+ 
+  /* Make the wrapping div explicitly scrollable */
+  #orders-section .card > div[style*="overflow-x"] {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+ 
+  .orders-table th,
+  .orders-table td {
+    padding: 10px 10px;
+    font-size: 12px;
+  }
+ 
+  .status-select {
+    font-size: 11px;
+    padding: 5px 8px;
+  }
+}
+ 
+ 
+/* ─────────────────────────────────────────────────────────────
+   12. PRODUCT CARDS GRID
+   
+   PROBLEM: repeat(auto-fill, minmax(280px, 1fr)) works well 
+   but 280px is too wide for a single-column phone.
+   ───────────────────────────────────────────────────────────── */
+@media (max-width: 600px) {
+  .product-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    margin-top: 16px;
+  }
+ 
+  .product-img {
+    height: 130px;
+  }
+ 
+  .product-body {
+    padding: 12px;
+  }
+ 
+  .product-name {
+    font-size: 13px;
+  }
+ 
+  .product-price {
+    font-size: 16px;
+  }
+ 
+  .product-desc {
+    display: none; /* hide description on very small cards */
+  }
+}
+ 
+@media (max-width: 380px) {
+  .product-grid {
+    grid-template-columns: 1fr;
+  }
+ 
+  .product-img {
+    height: 180px;
+  }
+ 
+  .product-desc {
+    display: block;
+  }
+}
+ 
+ 
+/* ─────────────────────────────────────────────────────────────
+   13. ADD PRODUCT MODAL
+   
+   PROBLEM: max-width: 560px panel can overflow; 1fr 1fr form-row
+   and 1fr 1fr 1fr form-row-3 break on narrow screens.
+   The modal itself needs safe padding from edges.
+   ───────────────────────────────────────────────────────────── */
+@media (max-width: 600px) {
+  .form-overlay {
+    padding: 12px;
+    align-items: flex-end; /* sheet slides up from bottom on mobile */
+  }
+ 
+  .form-panel {
+    width: 100% !important;
+    max-width: 100% !important;
+    border-radius: 20px 20px 0 0; /* bottom sheet style */
+    max-height: 92vh;
+    padding: 20px 16px;
+  }
+ 
+  /* Stack all 2-column form rows */
+  .form-row {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+ 
+  /* Stack 3-column row */
+  .form-row-3 {
+    grid-template-columns: 1fr 1fr; /* 2-col is fine on most phones */
+    gap: 10px;
+  }
+ 
+  .form-actions {
+    flex-direction: column;
+    gap: 8px;
+  }
+ 
+  .form-actions .btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
+ 
+@media (max-width: 380px) {
+  .form-row-3 {
+    grid-template-columns: 1fr;
+  }
+}
+ 
+ 
+/* ─────────────────────────────────────────────────────────────
+   14. EDIT PRODUCT MODAL
+   
+   PROBLEM: max-width: 620px; ep-grid 2-col; edit-actions row.
+   Same bottom-sheet fix as add modal.
+   ───────────────────────────────────────────────────────────── */
+@media (max-width: 700px) {
+  .edit-overlay {
+    padding: 0;
+    align-items: flex-end;
+  }
+ 
+  .edit-panel {
+    max-width: 100% !important;
+    border-radius: 20px 20px 0 0;
+    max-height: 94vh;
+    width: 100%;
+  }
+ 
+  .edit-panel-head {
+    padding: 16px 16px 12px;
+  }
+ 
+  .edit-panel-body {
+    padding: 12px 16px 20px;
+  }
+ 
+  /* Stack ep-grid to single column */
+  .ep-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+ 
+  /* ep-full already spans full width, no change needed */
+ 
+  .edit-actions {
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 16px;
+    padding-top: 16px;
+  }
+ 
+  .btn-save,
+  .btn-cancel {
+    width: 100%;
+    justify-content: center;
+    padding: 0.85rem;
+  }
+}
+ 
+ 
+/* ─────────────────────────────────────────────────────────────
+   15. IMAGE UPLOAD & PREVIEW
+   
+   PROBLEM: img-preview-grid with 72px thumbs can overflow 
+   inside narrow modals. Primary preview row can wrap oddly.
+   ───────────────────────────────────────────────────────────── */
+@media (max-width: 480px) {
+  .img-preview-grid {
+    gap: 6px;
+  }
+ 
+  .img-preview-thumb,
+  .img-preview-thumb img {
+    width: 60px;
+    height: 60px;
+  }
+ 
+  /* Primary preview row — stack on tiny screens */
+  #epPrimaryPreviewRow {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+ 
+ 
+/* ─────────────────────────────────────────────────────────────
+   16. PROFILE SECTION
+   
+   PROBLEM: 1fr 1fr grid doesn't stack; profile-card is capped
+   at 560px which is fine, but the grid itself breaks.
+   ───────────────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  #profile-section > div[style*="grid-template-columns"] {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 16px !important;
+  }
+ 
+  #profile-section .profile-card {
+    max-width: 100%;
+  }
+}
+ 
+@media (max-width: 600px) {
+  /* Stack 2-col form rows inside profile */
+  #profileForm .form-row {
+    grid-template-columns: 1fr;
+  }
+}
+ 
+ 
+/* ─────────────────────────────────────────────────────────────
+   17. NOTIFICATION PANEL
+   
+   PROBLEM: Fixed 340px width panel clips on screens < 360px.
+   ───────────────────────────────────────────────────────────── */
+@media (max-width: 400px) {
+  .notif-panel {
+    width: calc(100vw - 24px);
+    right: -8px;
+  }
+}
+ 
+ 
+/* ─────────────────────────────────────────────────────────────
+   18. TOAST NOTIFICATION
+   
+   PROBLEM: right: 2rem on tiny screens still OK, but on
+   320px phones the toast can be 90% of screen width and still 
+   look fine — just prevent it clipping the left edge.
+   ───────────────────────────────────────────────────────────── */
+@media (max-width: 480px) {
+  .dash-toast {
+    left: 12px;
+    right: 12px;
+    bottom: 16px;
+    font-size: 13px;
+    padding: 12px 16px;
+    border-radius: 12px;
+  }
+}
+ 
+ 
+/* ─────────────────────────────────────────────────────────────
+   19. TOP PRODUCTS LIST
+   
+   PROBLEM: Inline flex with bar + revenue text can squish on 
+   narrow cards (< 300px container).
+   ───────────────────────────────────────────────────────────── */
+@media (max-width: 480px) {
+  .top-prod-item {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+ 
+  .top-bar-wrap {
+    width: 100%;
+    order: 3;
+  }
+ 
+  .top-rev,
+  .top-units {
+    text-align: left;
+  }
+}
+ 
+ 
+/* ─────────────────────────────────────────────────────────────
+   20. ALERT STRIP (Overview alerts)
+   
+   PROBLEM: alert-row uses flex with a count badge; fine on 
+   desktop but can overflow on narrow screens.
+   ───────────────────────────────────────────────────────────── */
+@media (max-width: 400px) {
+  .alert-row {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+ 
+  .alert-row-text {
+    flex: 1 1 120px;
+  }
+}
+ 
+ 
+/* ─────────────────────────────────────────────────────────────
+   21. SIDEBAR BOTTOM (shop badge text)
+   
+   PROBLEM: shop-badge-name and shop-badge-email use dark 
+   text colors — fine on desktop dark sidebar but at 60px 
+   collapse the badge is hidden anyway. This ensures readability
+   when sidebar opens as overlay on mobile.
+   ───────────────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .shop-badge-name {
+    color: rgba(255, 255, 255, 0.85) !important;
+  }
+ 
+  .shop-badge-email {
+    color: rgba(255, 255, 255, 0.45) !important;
+  }
+ 
+  .shop-badge {
+    background: rgba(255, 255, 255, 0.08) !important;
+  }
+}
+ 
+ 
+/* ─────────────────────────────────────────────────────────────
+   22. STATUS DONUT LEGEND
+   
+   PROBLEM: Legend items inside the card can overflow if the
+   card is stacked into a 1-col layout with limited width.
+   ───────────────────────────────────────────────────────────── */
+@media (max-width: 480px) {
+  .status-donut-legend {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+  }
+}
+ 
+ 
+/* ─────────────────────────────────────────────────────────────
+   23. GENERAL UTILITY: Ensure no fixed widths break layout
+   ───────────────────────────────────────────────────────────── */
+@media (max-width: 600px) {
+  /* Any inline-width tables should scroll */
+  [style*="overflow-x:auto"],
+  [style*="overflow-x: auto"] {
+    -webkit-overflow-scrolling: touch;
+  }
+ 
+  /* Prevent cards from having fixed widths */
+  .card {
+    min-width: 0;
+    overflow: hidden;
+  }
+}
+ 
+ 
+/* ─────────────────────────────────────────────────────────────
+   24. ANIMATION SAFETY
+   
+   Respect user preference for reduced motion (accessibility).
+   ───────────────────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+ 
+ 
+/* ─────────────────────────────────────────────────────────────
+   25. iOS SAFE AREAS (notch / Dynamic Island support)
+   ───────────────────────────────────────────────────────────── */
+@supports (padding: env(safe-area-inset-bottom)) {
+  .sidebar {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+ 
+  .dash-toast {
+    bottom: calc(16px + env(safe-area-inset-bottom));
+  }
+ 
+  .form-panel,
+  .edit-panel {
+    padding-bottom: calc(20px + env(safe-area-inset-bottom));
+  }
+}
+ 
+ 
+/* ─────────────────────────────────────────────────────────────
+   26. TABLET-SPECIFIC TWEAKS (481px – 768px)
+   ───────────────────────────────────────────────────────────── */
+@media (min-width: 481px) and (max-width: 768px) {
+  .content {
+    padding: 24px 20px;
+  }
+ 
+  .stats-strip {
+    grid-template-columns: repeat(2, 1fr);
+  }
+ 
+  .product-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+ 
+ 
+/* ─────────────────────────────────────────────────────────────
+   27. SMALL LAPTOP (769px – 1024px) — sidebar is visible
+   
+   The existing 900px breakpoint collapses sidebar to 60px.
+   These tweaks clean up the content area at that breakpoint.
+   ───────────────────────────────────────────────────────────── */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .content {
+    padding: 24px 20px;
+  }
+ 
+  .analytics-kpi-row {
+    grid-template-columns: repeat(2, 1fr);
+  }
+ 
+  .analytics-row {
+    grid-template-columns: 1fr;
+  }
+ 
+  .chart-wrap {
+    height: 240px;
+  }
+}
+/* Hide top header nav on mobile */
+@media (max-width: 768px) {
+  header {
+    display: none;
+  }
+
+  /* Remove the extra top gap that the header left behind */
+  .main {
+    padding-top: 0;
+  }
+
+  /* Topbar already sticks to top, no adjustment needed */
+  .topbar {
+    top: 0;
+  }
+}
+
+    

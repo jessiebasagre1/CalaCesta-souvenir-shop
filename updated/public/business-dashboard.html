@@ -19,11 +19,12 @@
       display: none;
     }
     .notif-panel {
-      display: none; position: absolute; right: 0; top: calc(100% + 10px);
-      width: 340px; background: #fff; border-radius: 14px;
-      box-shadow: 0 8px 40px rgba(0,0,0,.16); border: 1px solid #eee;
-      z-index: 9999; overflow: hidden;
-    }
+        display: none; position: fixed; right: 12px; top: 64px;
+        width: min(340px, calc(100vw - 24px));
+        background: #fff; border-radius: 14px;
+        box-shadow: 0 8px 40px rgba(0,0,0,.16); border: 1px solid #eee;
+        z-index: 9999; overflow: hidden;
+      }
     .notif-panel.open { display: block; animation: slideDown .18s ease; }
     @keyframes slideDown { from { opacity:0; transform:translateY(-8px); } to { opacity:1; transform:none; } }
     .notif-header {
@@ -32,7 +33,7 @@
       font-weight: 700; font-size: 14px; color: #1a1a1a;
     }
     .notif-clear { font-size: 11px; color: var(--orange, #c2612a); cursor: pointer; font-weight: 600; border: none; background: none; }
-    .notif-list { max-height: 320px; overflow-y: auto; }
+    .notif-list { max-height: min(320px, 50vh); overflow-y: auto; -webkit-overflow-scrolling: touch; }
     .notif-item {
       display: flex; gap: 12px; align-items: flex-start;
       padding: 12px 18px; border-bottom: 1px solid #f7f7f7;
@@ -52,6 +53,53 @@
     .notif-title { font-size: 13px; font-weight: 600; color: #1a1a1a; line-height: 1.3; }
     .notif-sub   { font-size: 11px; color: #888; margin-top: 2px; }
     .notif-empty { text-align: center; padding: 32px; color: #aaa; font-size: 13px; }
+
+    /* Header removed — reset topbar top padding */
+.topbar {
+  top: 0;
+}
+
+/* On mobile, topbar left padding makes room for hamburger */
+@media (max-width: 768px) {
+  .topbar {
+    padding-left: 60px;
+  }
+}
+
+/* Notification panel on mobile — full positioning fix */
+@media (max-width: 480px) {
+  .notif-panel {
+    right: 8px;
+    top: 58px;
+    width: calc(100vw - 16px);
+    border-radius: 12px;
+  }
+
+  .notif-item {
+    padding: 10px 14px;
+    gap: 10px;
+  }
+
+  .notif-icon {
+    width: 30px;
+    height: 30px;
+    font-size: 12px;
+    flex-shrink: 0;
+  }
+
+  .notif-title {
+    font-size: 12px;
+  }
+
+  .notif-sub {
+    font-size: 10px;
+  }
+
+  .notif-header {
+    padding: 12px 14px;
+    font-size: 13px;
+  }
+}
 
     /* ── ANALYTICS ─────────────────────────────────────────────── */
     .analytics-kpi-row {
@@ -302,6 +350,7 @@
       .analytics-kpi-row { grid-template-columns: 1fr 1fr; }
       .analytics-row, .analytics-row2 { grid-template-columns: 1fr; }
     }
+    
   </style>
 </head>
 <body>
@@ -319,6 +368,9 @@
   </div>
   <nav class="sidebar-nav">
     <div class="nav-section-label">Main</div>
+    <a class="nav-item" href="index.html">
+      <i class="fas fa-home"></i><span>Home</span>
+    </a>
     <button class="nav-item active" onclick="showSection('overview', this)">
       <i class="fas fa-th-large"></i><span>Overview</span>
     </button>
@@ -340,10 +392,6 @@
     </button>
   </nav>
   <div class="sidebar-bottom">
-    <div class="shop-badge">
-      <div class="shop-badge-name" id="sidebarShopName"></div>
-      <div class="shop-badge-email" id="sidebarEmail"></div>
-    </div>
     <button class="btn-logout" onclick="logout()">
       <i class="fas fa-sign-out-alt"></i><span>Log out</span>
     </button>
@@ -352,17 +400,6 @@
 
 <!-- ═══ MAIN ═══ -->
 <main class="main">
-  <header>
-    <div class="nav-container">
-      <a href="index.html" class="logo"><i class="fas fa-gift"></i> Cala-Cesta</a>
-      <nav class="nav-links">
-        <a href="index.html"><i class="fas fa-home"></i> Home</a>
-      </nav>
-      <div class="nav-right">
-        <div class="auth-section" id="authSection"></div>
-      </div>
-    </div>
-  </header>
 
   <div class="topbar">
     <div class="page-title" id="pageTitle">Overview</div>
@@ -958,8 +995,6 @@
       if (!res.ok) throw new Error();
       currentUser = await res.json();
 
-      document.getElementById('sidebarShopName').textContent = currentUser.businessName || 'Your Shop';
-      document.getElementById('sidebarEmail').textContent = currentUser.email;
       document.getElementById('shopInfo').innerHTML = `
         <div style="display:grid;grid-template-columns:120px 1fr;gap:6px 12px;font-size:14px;">
           <span style="color:var(--ink-muted);">Business</span><span style="font-weight:500;">${currentUser.businessName || '—'}</span>
@@ -2097,6 +2132,84 @@ async function bVerifyEmailCode() {
     showToast('Network error — please try again', 'error');
   }
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   CALA-CESTA — MOBILE SIDEBAR TOGGLE
+   ═══════════════════════════════════════════════════════════════ */
+
+(function () {
+  'use strict';
+
+  /* ── Create hamburger button ── */
+  const hamburger = document.createElement('button');
+  hamburger.className = 'sidebar-hamburger';
+  hamburger.id = 'sidebarHamburger';
+  hamburger.setAttribute('aria-label', 'Open menu');
+  hamburger.setAttribute('aria-expanded', 'false');
+  hamburger.innerHTML = '<i class="fas fa-bars"></i>';
+  document.body.appendChild(hamburger);
+
+  /* ── Create backdrop ── */
+  const backdrop = document.createElement('div');
+  backdrop.className = 'sidebar-backdrop';
+  backdrop.id = 'sidebarBackdrop';
+  document.body.appendChild(backdrop);
+
+  const sidebar = document.querySelector('.sidebar');
+
+  function openSidebar() {
+    sidebar.classList.add('open');
+    backdrop.classList.add('open');
+    hamburger.setAttribute('aria-expanded', 'true');
+    hamburger.innerHTML = '<i class="fas fa-times"></i>';
+    document.body.style.overflow = 'hidden'; /* prevent body scroll while drawer open */
+  }
+
+  function closeSidebar() {
+    sidebar.classList.remove('open');
+    backdrop.classList.remove('open');
+    hamburger.setAttribute('aria-expanded', 'false');
+    hamburger.innerHTML = '<i class="fas fa-bars"></i>';
+    document.body.style.overflow = '';
+  }
+
+  hamburger.addEventListener('click', function (e) {
+    e.stopPropagation();
+    sidebar.classList.contains('open') ? closeSidebar() : openSidebar();
+  });
+
+  /* Close on backdrop tap */
+  backdrop.addEventListener('click', closeSidebar);
+
+  /* Close when a nav item is tapped (auto-navigate UX) */
+  if (sidebar) {
+    sidebar.querySelectorAll('.nav-item').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        /* Only close on mobile widths */
+        if (window.innerWidth <= 768) {
+          closeSidebar();
+        }
+      });
+    });
+  }
+
+  /* Close on Escape key */
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') closeSidebar();
+  });
+
+  /* On resize above 768px, reset sidebar to normal (non-overlay) state */
+  window.addEventListener('resize', function () {
+    if (window.innerWidth > 768) {
+      sidebar.classList.remove('open');
+      backdrop.classList.remove('open');
+      document.body.style.overflow = '';
+      hamburger.innerHTML = '<i class="fas fa-bars"></i>';
+    }
+  });
+
+})();
+
   /* ─── LOGOUT ──────────────────────────────────────────── */
   function logout() { localStorage.clear(); window.location.href = 'index.html'; }
 </script>
