@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Payment Successful</title>
+</head>
+<body>
+  <h1>Payment Successful!</h1>
+  <p>Thank you for your order. We're confirming your payment now...</p>
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const orderId = params.get('order');
+    const token = localStorage.getItem('token');
+
+    if (orderId && token) {
+      fetch('/api/payments/verify', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ orderId })
+      })
+      .then(r => r.json())
+      .then(data => {
+        if (data.paid) {
+          document.querySelector('p').textContent = 'Your GCash payment was confirmed! Redirecting to your orders...';
+        }
+        setTimeout(() => window.location.href = 'orders.html', 3000);
+      });
+    } else {
+      setTimeout(() => window.location.href = 'orders.html', 3000);
+    }
+  </script>
+</body>
+</html>

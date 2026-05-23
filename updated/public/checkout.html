@@ -113,13 +113,6 @@
             GCash
           </span>
         </label>
-        <label class="pay-option">
-          <input type="radio" name="payment" value="card">
-          <span class="pay-label">
-            <i class="fas fa-credit-card"></i>
-            Credit / Debit
-          </span>
-        </label>
       </div>
 
       <!-- COD info -->
@@ -131,29 +124,7 @@
       <!-- GCash info -->
       <div id="gcashInfo" class="alert info">
         <i class="fas fa-mobile-alt"></i>
-        You'll receive GCash payment instructions via email after placing your order.
-      </div>
-
-      <!-- Card fields -->
-      <div id="cardFields" class="card-fields">
-        <div class="form-group">
-          <label>Card Number</label>
-          <input type="text" id="cardNumber" placeholder="1234 5678 9012 3456" maxlength="19">
-        </div>
-        <div class="form-row">
-          <div class="form-group">
-            <label>Expiry Date</label>
-            <input type="text" id="cardExpiry" placeholder="MM / YY" maxlength="7">
-          </div>
-          <div class="form-group">
-            <label>CVV</label>
-            <input type="text" id="cardCvv" placeholder="123" maxlength="4">
-          </div>
-        </div>
-        <div class="form-group">
-          <label>Cardholder Name</label>
-          <input type="text" id="cardName" placeholder="MARIA SANTOS">
-        </div>
+        You'll be redirected to PayMongo's secure page to complete your GCash payment.
       </div>
 
       <button class="btn-checkout" id="placeOrderBtn" onclick="placeOrder()">
@@ -226,7 +197,6 @@
     await loadCartSummary();
     prefillUserInfo();
     setupPaymentToggle();
-    setupCardFormatting();
   });
 
   async function loadCartSummary() {
@@ -293,38 +263,19 @@
   }
 
   function setupPaymentToggle() {
-    const radios = document.querySelectorAll('input[name="payment"]');
-    const codInfo = document.getElementById('codInfo');
-    const gcashInfo = document.getElementById('gcashInfo');
-    const cardFields = document.getElementById('cardFields');
+  const radios    = document.querySelectorAll('input[name="payment"]');
+  const codInfo   = document.getElementById('codInfo');
+  const gcashInfo = document.getElementById('gcashInfo');
 
-    radios.forEach(r => r.addEventListener('change', () => {
-      codInfo.style.display = 'none';
-      gcashInfo.style.display = 'none';
-      cardFields.classList.remove('visible');
+  radios.forEach(r => r.addEventListener('change', () => {
+    codInfo.style.display   = 'none';
+    gcashInfo.style.display = 'none';
 
-      if (r.value === 'cod') codInfo.style.display = 'flex';
-      else if (r.value === 'gcash') gcashInfo.style.display = 'flex';
-      else if (r.value === 'card') cardFields.classList.add('visible');
-    }));
-  }
+    if (r.value === 'cod')   codInfo.style.display   = 'flex';
+    if (r.value === 'gcash') gcashInfo.style.display = 'flex';
+  }));
+}
 
-  function setupCardFormatting() {
-    const num = document.getElementById('cardNumber');
-    if (num) {
-      num.addEventListener('input', () => {
-        num.value = num.value.replace(/\D/g,'').replace(/(.{4})/g,'$1 ').trim().slice(0,19);
-      });
-    }
-    const exp = document.getElementById('cardExpiry');
-    if (exp) {
-      exp.addEventListener('input', () => {
-        let v = exp.value.replace(/\D/g,'');
-        if (v.length >= 2) v = v.slice(0,2) + ' / ' + v.slice(2,4);
-        exp.value = v;
-      });
-    }
-  }
 
   function showAlert(msg, type = 'error') {
     const el = document.getElementById('formAlert');
@@ -339,95 +290,98 @@
   }
 
   async function placeOrder() {
-    hideAlert();
+  hideAlert();
 
-    // Validate
-    const firstName = document.getElementById('firstName').value.trim();
-    const lastName  = document.getElementById('lastName').value.trim();
-    const email     = document.getElementById('email').value.trim();
-    const address   = document.getElementById('address').value.trim();
-    const city      = document.getElementById('city').value.trim();
+  // Validate
+  const firstName = document.getElementById('firstName').value.trim();
+  const lastName  = document.getElementById('lastName').value.trim();
+  const email     = document.getElementById('email').value.trim();
+  const address   = document.getElementById('address').value.trim();
+  const city      = document.getElementById('city').value.trim();
 
-    if (!firstName || !lastName) return showAlert('Please enter your full name.');
-    if (!email || !email.includes('@')) return showAlert('Please enter a valid email address.');
-    if (!address) return showAlert('Please enter your shipping address.');
-    if (!city) return showAlert('Please enter your city.');
+  if (!firstName || !lastName) return showAlert('Please enter your full name.');
+  if (!email || !email.includes('@')) return showAlert('Please enter a valid email address.');
+  if (!address) return showAlert('Please enter your shipping address.');
+  if (!city) return showAlert('Please enter your city.');
 
-    const paymentMethod = document.querySelector('input[name="payment"]:checked').value;
+  const paymentMethod = document.querySelector('input[name="payment"]:checked').value;
 
-    if (paymentMethod === 'card') {
-      const cn = document.getElementById('cardNumber').value.replace(/\s/g,'');
-      const ce = document.getElementById('cardExpiry').value;
-      const cv = document.getElementById('cardCvv').value;
-      if (cn.length < 16) return showAlert('Please enter a valid card number.');
-      if (!ce.includes('/'))  return showAlert('Please enter a valid expiry date.');
-      if (cv.length < 3)  return showAlert('Please enter a valid CVV.');
-    }
+  // Loading state
+  const btn      = document.getElementById('placeOrderBtn');
+  const spinner  = document.getElementById('spinner');
+  const lockIcon = document.getElementById('lockIcon');
+  const btnText  = document.getElementById('btnText');
+  btn.disabled = true;
+  spinner.style.display = 'block';
+  lockIcon.style.display = 'none';
+  btnText.textContent = 'Processing Order...';
 
-    // Loading state
-    const btn = document.getElementById('placeOrderBtn');
-    const spinner = document.getElementById('spinner');
-    const lockIcon = document.getElementById('lockIcon');
-    const btnText = document.getElementById('btnText');
-    btn.disabled = true;
-    spinner.style.display = 'block';
-    lockIcon.style.display = 'none';
-    btnText.textContent = 'Processing Order...';
+  try {
+    const token = localStorage.getItem('token');
+    const shippingAddress = `${firstName} ${lastName}, ${address}, ${city}, ${document.getElementById('province').value}, ${document.getElementById('zip').value}, ${document.getElementById('country').value}`;
 
-    try {
-      const token = localStorage.getItem('token');
-      const shippingAddress = `${firstName} ${lastName}, ${address}, ${city}, ${document.getElementById('province').value}, ${document.getElementById('zip').value}, ${document.getElementById('country').value}`;
+    const subtotal   = cartData.total;
+    const tax        = subtotal * 0.12;
+    const grandTotal = subtotal + tax;
 
-      const subtotal = cartData.total;
-      const tax = subtotal * 0.12;
-      const grandTotal = subtotal + tax;
+    // Step 1 — Create the order
+    const orderRes = await fetch('/api/checkout', {
+      method: 'POST',
+      headers: {
+        'Content-Type':  'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({
+        shippingAddress,
+        phone:         document.getElementById('phone').value,
+        email,
+        paymentMethod,
+        notes:         document.getElementById('notes').value,
+        items:         cartData.items,
+        subtotal,
+        tax:           tax.toFixed(2),
+        total:         grandTotal.toFixed(2)
+      })
+    });
 
-      // Group items by shop/business
-      const shopGroups = {};
-      for (const item of cartData.items) {
-        const bid = item.product.shopId || 'unknown';
-        if (!shopGroups[bid]) shopGroups[bid] = [];
-        shopGroups[bid].push(item);
-      }
+    const orderData = await orderRes.json();
+    if (!orderRes.ok) throw new Error(orderData.message || 'Order failed');
+console.log('orderData:', orderData);
+    const orderId = orderData.orderId || orderData._id || orderData.order?._id;
 
-      // Place one order per business (or single order for all)
-      const res = await fetch('/api/checkout', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          shippingAddress,
-          phone: document.getElementById('phone').value,
-          email,
-          paymentMethod,
-          notes: document.getElementById('notes').value,
-          items: cartData.items,
-          subtotal,
-          tax: tax.toFixed(2),
-          total: grandTotal.toFixed(2)
-        })
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) throw new Error(data.message || 'Order failed');
-
-      // Show success
-     document.getElementById('orderNumberDisplay').textContent =
-    `Order #${data.orderNumber}`;
-
+    // Step 2 — COD: show success overlay
+    if (paymentMethod === 'cod') {
+      document.getElementById('orderNumberDisplay').textContent = `Order #${orderData.orderNumber}`;
       document.getElementById('successOverlay').classList.add('show');
-
-    } catch (err) {
-      showAlert(err.message || 'Failed to place order. Please try again.');
-      btn.disabled = false;
-      spinner.style.display = 'none';
-      lockIcon.style.display = 'inline';
-      btnText.textContent = 'Place Order Securely';
+      return;
     }
+
+    // Step 3 — GCash: redirect to PayMongo
+    btnText.textContent = 'Redirecting to GCash...';
+
+    const payRes = await fetch('/api/payments/checkout', {
+      method:  'POST',
+      headers: {
+        'Content-Type':  'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({ orderId })
+    });
+
+    const payData = await payRes.json();
+    if (!payRes.ok) throw new Error(payData.message || 'Payment initialization failed');
+
+    // Step 4 — Redirect to PayMongo hosted page
+    window.location.href = payData.checkoutUrl;
+
+  } catch (err) {
+    showAlert(err.message || 'Failed to place order. Please try again.');
+    btn.disabled = false;
+    spinner.style.display = 'none';
+    lockIcon.style.display = 'inline';
+    btnText.textContent = 'Place Order Securely';
   }
+}
 </script>
 </body>
 </html>

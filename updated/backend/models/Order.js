@@ -15,6 +15,9 @@ const orderSchema = new mongoose.Schema({
   shippingAddress: String,
   trackingNumber:  String,
   orderNumber:     String,
+  paymentStatus:     { type: String, enum: ['pending', 'paid', 'failed'], default: 'pending' },
+  paymongoSessionId: { type: String },
+  paidAt:            { type: Date },
 }, { timestamps: true });
 
 module.exports = mongoose.model('Order', orderSchema);

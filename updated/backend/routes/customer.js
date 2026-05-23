@@ -3,6 +3,7 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const Order = require('../models/Order');
 const Review = require('../models/Review');
+const transporter = require('../utils/mailer');
 
 function verifyToken(req) {
   const token = req.headers.authorization?.split(' ')[1];
@@ -100,17 +101,40 @@ router.post('/send-verification', async (req, res) => {
     user.verificationExpiry = new Date(Date.now() + 10 * 60 * 1000);
     await user.save();
 
-    // TODO: send via nodemailer/sendgrid in production
-    console.log(`Verification code for ${user.email}: ${code}`);
+    await transporter.sendMail({
+      from:    `"Cala-Cesta" <${process.env.EMAIL_USER}>`,
+      to:      user.email,
+      subject: 'Verify your Cala-Cesta email',
+      html: `
+        <div style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto;
+                    padding:32px 24px;background:#f7f8fc;border-radius:16px;">
+          <h2 style="color:#1a1d2e;margin-bottom:8px;">Verify your email</h2>
+          <p style="color:#6b7280;margin-bottom:24px;">
+            Hi ${user.name}, use the code below to verify your Cala-Cesta account.
+            It expires in <strong>10 minutes</strong>.
+          </p>
+          <div style="background:#fff;border:2px solid #c2612a;border-radius:12px;
+                      padding:20px;text-align:center;margin-bottom:24px;">
+            <span style="font-size:38px;font-weight:800;letter-spacing:10px;
+                         color:#c2612a;">${code}</span>
+          </div>
+          <p style="color:#9ca3af;font-size:13px;">
+            If you didn't request this, you can safely ignore this email.
+          </p>
+        </div>
+      `,
+    });
+
     res.json({
       message: 'Verification code sent to your email!',
       devCode: process.env.NODE_ENV !== 'production' ? code : undefined,
     });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
+
+  } catch (err) {
+    console.error('[send-verification error]', err.message);
+    res.status(500).json({ message: 'Could not send verification email. Please try again.' });
   }
 });
-
 // POST /api/customer/verify-email
 router.post('/verify-email', async (req, res) => {
   try {

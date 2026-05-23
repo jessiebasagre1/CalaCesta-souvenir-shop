@@ -1,5 +1,6 @@
 require('dotenv').config();
-
+console.log('EMAIL_USER:', process.env.EMAIL_USER);
+console.log('EMAIL_PASS:', process.env.EMAIL_PASS ? 'loaded ✓' : 'MISSING ✗');
 const express = require('express');
 const path    = require('path');
 const cors    = require('cors');
@@ -14,7 +15,8 @@ const customerRoutes      = require('./routes/customer');
 const businessRoutes      = require('./routes/business');
 const shopRoutes          = require('./routes/shop');
 const uploadRoutes        = require('./routes/upload');
-const storeSettingsRoutes = require('./routes/storeSettings'); // ← ADDED
+const storeSettingsRoutes = require('./routes/storeSettings'); 
+const paymentRoutes = require('./routes/payments');  
 
 const app  = express();
 const PORT = process.env.PORT || 3000;
@@ -33,8 +35,10 @@ app.use('/api/cart',           cartRoutes);
 app.use('/api/customer',       customerRoutes);
 app.use('/api/business',       businessRoutes);
 app.use('/api/upload',         uploadRoutes);
-app.use('/api/store-settings', storeSettingsRoutes); // ← ADDED (must be before /api catch-all)
-app.use('/api',                shopRoutes);          // /api/featured + /api/checkout — keep last
+app.use('/api/store-settings', storeSettingsRoutes); 
+app.use('/api/payments', paymentRoutes); 
+app.use('/api',                shopRoutes);          
+
 
 // Health check
 app.get('/api/test', async (req, res) => {
