@@ -20,6 +20,7 @@ const paymentRoutes = require('./routes/payments');
 const shippingRoutes = require('./routes/shipping');
 const taxRoutes      = require('./routes/tax');
 const voucherRoutes  = require('./routes/vouchers');
+const siteReviewRoutes = require('./routes/siteReviews');
 const app  = express();
 const PORT = process.env.PORT || 3000;
 
@@ -43,7 +44,8 @@ app.use('/api/payments', paymentRoutes);
 app.use('/api',                shopRoutes);  
 app.use('/api/shipping', shippingRoutes);
 app.use('/api/tax',      taxRoutes);
-app.use('/api/vouchers', voucherRoutes);        
+app.use('/api/vouchers', voucherRoutes); 
+app.use('/api/site-reviews', siteReviewRoutes);      
 
 
 // Health check

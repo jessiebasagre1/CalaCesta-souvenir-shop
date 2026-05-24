@@ -20,7 +20,7 @@
     <nav>
       <ul class="nav-links" id="navLinks">
         <li><a href="index.html#featured-shops"><i class="fas fa-store"></i> Shops</a></li>
-        <li><a href="index.html#top-products">Products</a></li>
+        <li><a href="products.html">Products</a></li>
         <li><a href="#promo">Deals</a></li>
         <li><a href="#about">About</a></li>
       </ul>
@@ -697,11 +697,18 @@ document.getElementById('modalBody').innerHTML = `
     <div style="color:#666">${order.shippingAddress}</div>
   </div>` : ''}
   <div style="display:flex;gap:0.75rem;margin-top:1.5rem;flex-wrap:wrap;">
-    <button class="btn btn-primary" style="flex:1" onclick="closeModal();trackOrder('${order._id}');switchTab('track')">
-      <i class="fas fa-map-marker-alt"></i> Track Order
-    </button>
+    ${order.status === 'delivered'
+      ? `<button class="btn btn-primary" style="flex:1;background:#28a745;border-color:#28a745;"
+           onclick="closeModal();showReceipt('${order._id}')">
+           <i class="fas fa-receipt"></i> View Digital Receipt
+         </button>`
+      : `<button class="btn btn-primary" style="flex:1"
+           onclick="closeModal();trackOrder('${order._id}');switchTab('track')">
+           <i class="fas fa-map-marker-alt"></i> Track Order
+         </button>`
+    }
     ${order.status === 'pending' ? `
-    <button class="btn btn-outline" style="flex:1;color:#dc3545;border-color:#dc3545;" 
+    <button class="btn btn-outline" style="flex:1;color:#dc3545;border-color:#dc3545;"
       onclick="closeModal();cancelOrder('${order._id}')">
       <i class="fas fa-times"></i> Cancel Order
     </button>` : ''}
@@ -710,7 +717,133 @@ document.getElementById('modalBody').innerHTML = `
 `;
   document.getElementById('orderModal').classList.add('open');
 }
+/* ═══════════════════════════════════════════════════
+   DIGITAL RECEIPT
+═══════════════════════════════════════════════════ */
+function showReceipt(orderId) {
+  const order = allOrders.find(o => o._id === orderId);
+  if (!order) return;
 
+  const receiptNum = `CCR-${order._id.slice(-8).toUpperCase()}`;
+  const deliveredDate = new Date(order.updatedAt).toLocaleDateString('en-PH', {
+    year:'numeric', month:'long', day:'numeric'
+  });
+  const placedDate = new Date(order.createdAt).toLocaleDateString('en-PH', {
+    year:'numeric', month:'long', day:'numeric', hour:'2-digit', minute:'2-digit'
+  });
+
+  const itemRows = (order.items || []).map(item => `
+    <tr>
+      <td style="padding:.6rem .5rem;border-bottom:1px solid #f0ebe4;">${item.productName || 'Product'}</td>
+      <td style="padding:.6rem .5rem;border-bottom:1px solid #f0ebe4;text-align:center;">${item.quantity}</td>
+      <td style="padding:.6rem .5rem;border-bottom:1px solid #f0ebe4;text-align:right;">₱${(item.price||0).toFixed(2)}</td>
+      <td style="padding:.6rem .5rem;border-bottom:1px solid #f0ebe4;text-align:right;font-weight:600;">₱${((item.price||0)*item.quantity).toFixed(2)}</td>
+    </tr>`).join('');
+
+  document.getElementById('modalTitle').innerHTML =
+    `<i class="fas fa-receipt" style="color:#28a745;margin-right:.4rem;"></i>Digital Receipt`;
+
+  document.getElementById('modalBody').innerHTML = `
+    <div id="receiptDoc" style="font-family:'DM Sans',sans-serif;max-width:480px;margin:0 auto;">
+
+      <!-- Header -->
+      <div style="text-align:center;padding:1.2rem 1rem 1rem;border-bottom:2px dashed #e8d5c0;">
+        <div style="font-size:1.5rem;font-weight:900;color:#8B4513;letter-spacing:-.5px;">
+          🎁 Cala-Cesta
+        </div>
+        <div style="font-size:.75rem;color:#aaa;margin-top:.2rem;">Calabanga, Camarines Sur, Philippines</div>
+        <div style="margin-top:.8rem;display:inline-block;background:#eafaf1;color:#28a745;
+                    padding:.3rem 1rem;border-radius:20px;font-size:.82rem;font-weight:700;
+                    border:1.5px solid #28a745;">
+          <i class="fas fa-check-circle"></i> ORDER DELIVERED
+        </div>
+      </div>
+
+      <!-- Receipt Info -->
+      <div style="padding:.9rem 1rem .5rem;background:#faf8f5;border-radius:10px;margin:1rem 0;">
+        <div style="display:flex;justify-content:space-between;margin-bottom:.4rem;">
+          <span style="font-size:.8rem;color:#888;">Receipt No.</span>
+          <span style="font-size:.8rem;font-weight:700;color:#8B4513;">${receiptNum}</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:.4rem;">
+          <span style="font-size:.8rem;color:#888;">Order Placed</span>
+          <span style="font-size:.8rem;">${placedDate}</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:.4rem;">
+          <span style="font-size:.8rem;color:#888;">Delivered On</span>
+          <span style="font-size:.8rem;font-weight:600;color:#28a745;">${deliveredDate}</span>
+        </div>
+        ${order.shippingAddress ? `
+        <div style="display:flex;justify-content:space-between;">
+          <span style="font-size:.8rem;color:#888;white-space:nowrap;margin-right:.5rem;">Delivered To</span>
+          <span style="font-size:.8rem;text-align:right;">${order.shippingAddress}</span>
+        </div>` : ''}
+      </div>
+
+      <!-- Items Table -->
+      <table style="width:100%;border-collapse:collapse;margin-bottom:.5rem;">
+        <thead>
+          <tr style="background:#f0ebe4;">
+            <th style="padding:.55rem .5rem;text-align:left;font-size:.78rem;color:#666;">Item</th>
+            <th style="padding:.55rem .5rem;text-align:center;font-size:.78rem;color:#666;">Qty</th>
+            <th style="padding:.55rem .5rem;text-align:right;font-size:.78rem;color:#666;">Price</th>
+            <th style="padding:.55rem .5rem;text-align:right;font-size:.78rem;color:#666;">Subtotal</th>
+          </tr>
+        </thead>
+        <tbody>${itemRows}</tbody>
+      </table>
+
+      <!-- Total -->
+      <div style="border-top:2px solid #8B4513;padding:.9rem .5rem;display:flex;
+                  justify-content:space-between;align-items:center;">
+        <span style="font-weight:700;font-size:.95rem;">TOTAL PAID</span>
+        <span style="font-weight:900;font-size:1.4rem;color:#8B4513;">₱${(order.total||0).toFixed(2)}</span>
+      </div>
+
+      <!-- Footer -->
+      <div style="text-align:center;padding:.9rem;border-top:2px dashed #e8d5c0;margin-top:.4rem;">
+        <div style="font-size:.76rem;color:#aaa;">Thank you for supporting Calabanga artisans!</div>
+        <div style="font-size:.7rem;color:#ccc;margin-top:.2rem;">support@calacesta.ph</div>
+      </div>
+
+    </div>
+
+    <!-- Actions -->
+    <div style="display:flex;gap:.75rem;margin-top:1.25rem;flex-wrap:wrap;">
+      <button onclick="printReceipt()"
+        style="flex:1;background:#8B4513;color:#fff;border:none;padding:.7rem 1rem;
+               border-radius:10px;font-size:.88rem;font-weight:600;cursor:pointer;
+               display:inline-flex;align-items:center;justify-content:center;gap:.5rem;">
+        <i class="fas fa-print"></i> Print / Save PDF
+      </button>
+      <button onclick="closeModal()"
+        style="flex:1;background:none;border:2px solid #ddd;padding:.7rem 1rem;
+               border-radius:10px;font-size:.88rem;font-weight:600;cursor:pointer;">
+        Close
+      </button>
+    </div>
+  `;
+
+  document.getElementById('orderModal').classList.add('open');
+}
+
+function printReceipt() {
+  const content = document.getElementById('receiptDoc').innerHTML;
+  const win = window.open('', '_blank', 'width=600,height=750');
+  win.document.write(`
+    <!DOCTYPE html><html><head>
+      <title>Cala-Cesta Receipt</title>
+      <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;600;700;900&display=swap" rel="stylesheet">
+      <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+      <style>
+        body { font-family:'DM Sans',sans-serif; padding:2rem; max-width:520px; margin:0 auto; }
+        @media print { button { display:none !important; } }
+      </style>
+    </head><body>${content}</body></html>`);
+  win.document.close();
+  win.focus();
+  setTimeout(() => win.print(), 500);
+}
 function closeModal() { document.getElementById('orderModal').classList.remove('open'); }
 document.getElementById('orderModal').addEventListener('click', e => {
   if (e.target === document.getElementById('orderModal')) closeModal();

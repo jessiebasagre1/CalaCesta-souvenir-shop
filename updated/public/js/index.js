@@ -359,10 +359,175 @@ const observer = new IntersectionObserver(entries => {
 }, { threshold: .1 });
 document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
 
+/* ══════════════════════════════════════════════
+   SITE REVIEWS
+══════════════════════════════════════════════ */
+
+let _selectedRating = 0;
+
+function renderStarSelector(currentRating) {
+  return `
+    <div class="star-select" id="starSelect" role="group" aria-label="Rating">
+      ${[1,2,3,4,5].map(n => `
+        <button type="button" class="${n <= currentRating ? 'active' : ''}"
+          onclick="setRating(${n})" aria-label="${n} star${n>1?'s':''}" data-val="${n}">
+          &#9733;
+        </button>`).join('')}
+    </div>`;
+}
+
+function setRating(n) {
+  _selectedRating = n;
+  document.querySelectorAll('#starSelect button').forEach(btn => {
+    btn.classList.toggle('active', Number(btn.dataset.val) <= n);
+  });
+}
+
+function starsHtml(rating) {
+  return [1,2,3,4,5].map(n =>
+    `<span style="color:${n <= rating ? '#f5a623' : '#d6c4a5'}; font-size:1.05rem;">&#9733;</span>`
+  ).join('');
+}
+
+function timeAgo(dateStr) {
+  const diff = (Date.now() - new Date(dateStr)) / 1000;
+  if (diff < 60) return 'just now';
+  if (diff < 3600) return `${Math.floor(diff/60)}m ago`;
+  if (diff < 86400) return `${Math.floor(diff/3600)}h ago`;
+  if (diff < 2592000) return `${Math.floor(diff/86400)}d ago`;
+  return new Date(dateStr).toLocaleDateString('en-PH', { month:'short', year:'numeric' });
+}
+
+function renderReviewCard(r) {
+  const initials = r.userName.split(' ').map(w => w[0]).join('').slice(0,2).toUpperCase();
+  return `
+    <div class="testimonial-card reveal">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.5rem;">
+        <div>${starsHtml(r.rating)}</div>
+        <span class="review-date">${timeAgo(r.createdAt)}</span>
+      </div>
+      <p class="testimonial-text">"${r.comment}"</p>
+      <div class="testimonial-author">
+        <div class="author-avatar">${initials}</div>
+        <div>
+          <div class="author-name">${r.userName}</div>
+          ${r.location ? `<div class="author-loc"><i class="fas fa-map-marker-alt"></i> ${r.location}</div>` : ''}
+        </div>
+      </div>
+    </div>`;
+}
+
+async function loadSiteReviews() {
+  const grid = document.getElementById('testimonialsGrid');
+  const summary = document.getElementById('reviewSummaryText');
+  try {
+    const res = await fetch('/api/site-reviews');
+    const reviews = await res.json();
+
+    if (!Array.isArray(reviews) || reviews.length === 0) {
+      grid.innerHTML = `<div class="reviews-empty" style="grid-column:1/-1">
+        <i class="fas fa-star" style="font-size:2rem;color:#d6c4a5;display:block;margin-bottom:.5rem;"></i>
+        No reviews yet — be the first to share your experience!
+      </div>`;
+      summary.textContent = 'Be the first to leave a review!';
+      return;
+    }
+
+    const avg = (reviews.reduce((s,r) => s + r.rating, 0) / reviews.length).toFixed(1);
+    summary.innerHTML = `
+      <div class="review-summary-bar">
+        <div>
+          <div class="review-avg-big">${avg}</div>
+          <div class="review-avg-stars">${starsHtml(Math.round(avg))}</div>
+          <div class="review-count-text">${reviews.length} customer review${reviews.length!==1?'s':''}</div>
+        </div>
+      </div>`;
+
+    grid.innerHTML = reviews.map(r => renderReviewCard(r)).join('');
+    grid.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+  } catch {
+    grid.innerHTML = `<div class="reviews-empty" style="grid-column:1/-1">Unable to load reviews. Please try again later.</div>`;
+    summary.textContent = 'Customer reviews';
+  }
+}
+
+async function renderReviewForm() {
+  const wrap = document.getElementById('reviewFormAuth');
+  const token = localStorage.getItem('token');
+  _selectedRating = 0;
+
+  if (!token) {
+    wrap.innerHTML = `
+      <div class="review-login-prompt">
+        <i class="fas fa-lock" style="font-size:1.5rem;color:var(--sand);display:block;margin-bottom:.5rem;"></i>
+        <a href="login.html">Log in</a> or <a href="signup.html">sign up</a> to leave a review.
+      </div>`;
+    return;
+  }
+
+  wrap.innerHTML = `
+    <p style="font-size:.87rem;color:var(--muted);margin-bottom:.9rem;">Your rating</p>
+    ${renderStarSelector(0)}
+    <textarea class="review-input" id="reviewComment" rows="3"
+      placeholder="Tell us about your experience with Cala-Cesta…" maxlength="1000"
+      oninput="document.getElementById('reviewCharCount').textContent=this.value.length+'/1000'"></textarea>
+    <div class="review-char-count" id="reviewCharCount">0/1000</div>
+    <input class="review-input" id="reviewLocation" type="text"
+      placeholder="Your location (optional, e.g. Naga City)" maxlength="80"
+      style="margin-bottom:1rem;">
+    <button class="review-submit-btn" onclick="submitSiteReview()">
+      <i class="fas fa-paper-plane"></i> Submit Review
+    </button>
+    <div id="reviewFormMsg" style="margin-top:.75rem;font-size:.88rem;"></div>`;
+}
+
+async function submitSiteReview() {
+  const token = localStorage.getItem('token');
+  if (!token) { window.location.href = 'login.html'; return; }
+
+  const comment  = document.getElementById('reviewComment')?.value.trim();
+  const location = document.getElementById('reviewLocation')?.value.trim();
+  const msgEl    = document.getElementById('reviewFormMsg');
+  const btn      = document.querySelector('.review-submit-btn');
+
+  if (!_selectedRating) { msgEl.innerHTML = '<span style="color:#c0392b;">Please select a star rating.</span>'; return; }
+  if (!comment)         { msgEl.innerHTML = '<span style="color:#c0392b;">Please write a comment.</span>'; return; }
+
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting…';
+  msgEl.textContent = '';
+
+  try {
+    const res = await fetch('/api/site-reviews', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ rating: _selectedRating, comment, location })
+    });
+    const data = await res.json();
+    if (res.ok) {
+      showToast('Thank you for your review! ⭐');
+      document.getElementById('reviewFormAuth').innerHTML = `
+        <div style="text-align:center;padding:1.2rem 0;color:var(--brown);font-weight:600;">
+          <i class="fas fa-check-circle" style="font-size:1.8rem;display:block;margin-bottom:.5rem;color:#27ae60;"></i>
+          Your review has been posted!
+        </div>`;
+      await loadSiteReviews();
+    } else {
+      msgEl.innerHTML = `<span style="color:#c0392b;">${data.message || 'Failed to submit review.'}</span>`;
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fas fa-paper-plane"></i> Submit Review';
+    }
+  } catch {
+    msgEl.innerHTML = '<span style="color:#c0392b;">Network error. Please try again.</span>';
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fas fa-paper-plane"></i> Submit Review';
+  }
+}
+
 /* ── INIT ── */
 document.addEventListener('DOMContentLoaded', async () => {
   await loadAuthState();
-  await Promise.all([loadFeaturedContent(), loadCategories()]);
+  await Promise.all([loadFeaturedContent(), loadCategories(), loadSiteReviews(), renderReviewForm()]);
   setTimeout(() => {
     document.querySelectorAll('.reveal:not(.visible)').forEach(el => observer.observe(el));
   }, 500);

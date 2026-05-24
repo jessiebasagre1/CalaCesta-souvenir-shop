@@ -232,8 +232,8 @@
       </div>
       <div class="why-card reveal">
         <div class="why-icon"><i class="fas fa-truck"></i></div>
-        <div class="why-title">Nationwide Delivery</div>
-        <p class="why-sub">We ship Calabanga's finest anywhere in the Philippines within 3–5 days. Free delivery for orders over &#8369;1,500.</p>
+        <div class="why-title">Free Delivery</div>
+        <p class="why-sub">Free delivery for orders over &#8369;1,500.</p>
       </div>
       <div class="why-card reveal">
         <div class="why-icon"><i class="fas fa-shield-alt"></i></div>
@@ -250,47 +250,24 @@
 </section>
 
 <!-- ── TESTIMONIALS ── -->
-<section class="testimonials-section">
+<section class="testimonials-section" id="reviews">
   <div class="container">
     <div class="section-head reveal">
       <div class="section-label">Reviews</div>
       <h2 class="section-title">What Our Customers Say</h2>
+      <p class="section-sub" id="reviewSummaryText">Loading reviews…</p>
     </div>
-    <div class="testimonials-grid">
-      <div class="testimonial-card reveal">
-        <div class="testimonial-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
-        <p class="testimonial-text">"I ordered a set of Calabanga banig mats as a pasalubong for my relatives abroad — they were absolutely amazed by the craftsmanship! Fast delivery and beautifully packed."</p>
-        <div class="testimonial-author">
-          <div class="author-avatar">MR</div>
-          <div>
-            <div class="author-name">Maria Reyes</div>
-            <div class="author-loc"><i class="fas fa-map-marker-alt"></i> Naga City, Camarines Sur</div>
-          </div>
-        </div>
-      </div>
-      <div class="testimonial-card reveal">
-        <div class="testimonial-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
-        <p class="testimonial-text">"The pili nut candy from Calabanga is the best I've tasted — so much better than what you find in pasalubong centers in Manila. Cala-Cesta makes it easy to order straight from the source!"</p>
-        <div class="testimonial-author">
-          <div class="author-avatar">JD</div>
-          <div>
-            <div class="author-name">Juan De Leon</div>
-            <div class="author-loc"><i class="fas fa-map-marker-alt"></i> Makati, Metro Manila</div>
-          </div>
-        </div>
-      </div>
-      <div class="testimonial-card reveal">
-        <div class="testimonial-stars">&#9733;&#9733;&#9733;&#9733;&#9734;</div>
-        <p class="testimonial-text">"Bought a hand-woven bag from a Calabanga shop for my mom's birthday. The seller even included a note about the weaver's story. You simply can't get that kind of experience anywhere else!"</p>
-        <div class="testimonial-author">
-          <div class="author-avatar">AL</div>
-          <div>
-            <div class="author-name">Ana Lim</div>
-            <div class="author-loc"><i class="fas fa-map-marker-alt"></i> Legazpi City, Albay</div>
-          </div>
-        </div>
+
+    <!-- Review Form -->
+    <div class="review-form-wrap reveal" id="reviewFormWrap">
+      <div class="review-form-inner">
+        <h3 class="review-form-title"><i class="fas fa-pen-nib"></i> Share Your Experience</h3>
+        <div id="reviewFormAuth"></div>
       </div>
     </div>
+
+    <!-- Review List -->
+    <div class="testimonials-grid" id="testimonialsGrid"></div>
   </div>
 </section>
 
