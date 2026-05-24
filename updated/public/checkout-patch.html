@@ -1,0 +1,259 @@
+<!--
+  ══════════════════════════════════════════════════════════════════
+  CHECKOUT INTEGRATION PATCH
+  ══════════════════════════════════════════════════════════════════
+  This file shows what changes to make in public/checkout.html
+  to support: voucher codes, dynamic tax settings, and shipping fees.
+
+  Search for the matching comment markers (──) and replace the
+  relevant blocks with the updated code below.
+  ══════════════════════════════════════════════════════════════════
+-->
+
+<!--
+  ── 1. ORDER SUMMARY HTML
+  Replace your existing order summary / totals block with this:
+-->
+<div class="order-summary">
+  <!-- Cart items rendered here by JS (unchanged) -->
+  <div id="cartItemsDisplay"></div>
+
+  <hr class="divider">
+
+  <div class="total-row">
+    <span>Subtotal</span>
+    <span id="summarySubtotal">—</span>
+  </div>
+
+  <!-- Voucher row (hidden until applied) -->
+  <div class="total-row" id="voucherRow" style="display:none;color:#276749;">
+    <span><i class="fas fa-tag" style="font-size:11px;"></i> Voucher (<span id="appliedVoucherCode"></span>)</span>
+    <span id="summaryDiscount">—</span>
+  </div>
+
+  <div class="total-row" id="taxRow">
+    <span>Tax (<span id="summaryTaxRate">12</span>% VAT)</span>
+    <span id="summaryTax">—</span>
+  </div>
+
+  <div class="total-row" id="shippingRow">
+    <span>Shipping</span>
+    <span id="summaryShipping">—</span>
+  </div>
+
+  <hr class="divider">
+  <div class="total-row grand">
+    <span>Total</span>
+    <span id="summaryTotal">—</span>
+  </div>
+
+  <!-- Voucher input -->
+  <div style="margin-top:16px;">
+    <label style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#888;display:block;margin-bottom:6px;">
+      Voucher / Coupon Code
+    </label>
+    <div style="display:flex;gap:8px;">
+      <input type="text" id="voucherCodeInput" placeholder="Enter code"
+        style="flex:1;height:40px;border:1px solid #ddd;border-radius:8px;padding:0 12px;font-size:13px;outline:none;text-transform:uppercase;">
+      <button id="applyVoucherBtn" onclick="applyVoucher()"
+        style="height:40px;padding:0 16px;background:var(--primary,#c2612a);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;">
+        Apply
+      </button>
+    </div>
+    <div id="voucherMsg" style="font-size:12px;margin-top:5px;min-height:16px;"></div>
+  </div>
+</div>
+
+
+<!--
+  ── 2. CHECKOUT JAVASCRIPT
+  Replace the existing totals/JS logic with the block below.
+  Add this in your <script> section inside checkout.html,
+  replacing the old subtotal/tax/total calculation code.
+-->
+<script>
+/* ════════════════════════════════════════════════════════════
+   CHECKOUT CALCULATION — Tax + Shipping + Voucher
+   ════════════════════════════════════════════════════════════ */
+
+let cartData       = null;
+let taxConfig      = { taxRate: 12, taxEnabled: true, taxMode: 'exclusive' };
+let shippingRules  = [];
+let appliedVoucher = null; // { discountAmount, freeShipping, code }
+let checkoutCity   = '';   // updated when user fills the city field
+
+// Load tax settings from API
+async function loadCheckoutTaxSettings() {
+  try {
+    const res = await fetch('/api/tax');
+    if (res.ok) taxConfig = await res.json();
+  } catch { /* use defaults */ }
+}
+
+// Load shipping rules to pick the best match for the user's region
+async function loadCheckoutShippingRules() {
+  try {
+    const res = await fetch('/api/shipping');
+    if (res.ok) shippingRules = (await res.json()).filter(r => r.isActive);
+  } catch { /* no dynamic shipping */ }
+}
+
+// Pick best shipping rule for a city/region string
+function pickShippingRule(city = '') {
+  if (!shippingRules.length) return null;
+  const q = city.toLowerCase();
+  // Exact or partial match first
+  let match = shippingRules.find(r => r.region.toLowerCase().includes(q) || q.includes(r.region.toLowerCase()));
+  // Fall back to "Nationwide" or similar catch-all
+  if (!match) match = shippingRules.find(r => /nationwide|all|everywhere/i.test(r.region));
+  return match || shippingRules[0]; // last resort: first rule
+}
+
+// Master calculation
+function computeCheckoutTotals() {
+  if (!cartData) return;
+
+  const subtotal = cartData.total;
+
+  // 1. Voucher discount
+  let discount = 0;
+  let freeShip = false;
+  if (appliedVoucher) {
+    discount = appliedVoucher.discountAmount;
+    freeShip = appliedVoucher.freeShipping;
+  }
+  const discountedSubtotal = Math.max(0, subtotal - discount);
+
+  // 2. Tax
+  let taxAmt = 0;
+  if (taxConfig.taxEnabled) {
+    if (taxConfig.taxMode === 'exclusive') {
+      taxAmt = discountedSubtotal * (taxConfig.taxRate / 100);
+    } else {
+      // inclusive: tax is already in price
+      taxAmt = discountedSubtotal - (discountedSubtotal / (1 + taxConfig.taxRate / 100));
+    }
+  }
+  const afterTax = taxConfig.taxMode === 'exclusive' ? discountedSubtotal + taxAmt : discountedSubtotal;
+
+  // 3. Shipping
+  const rule = pickShippingRule(checkoutCity);
+  let shippingFee = 0;
+  let shippingLabel = 'FREE';
+  if (!freeShip && rule) {
+    const freeThreshold = rule.freeShippingMinSpend;
+    if (freeThreshold > 0 && subtotal >= freeThreshold) {
+      shippingFee = 0;
+      shippingLabel = 'FREE';
+    } else {
+      shippingFee = rule.fee;
+      shippingLabel = `₱${shippingFee.toFixed(2)}`;
+    }
+  }
+
+  // 4. Final total
+  const total = afterTax + shippingFee;
+
+  // Update UI
+  document.getElementById('summarySubtotal').textContent = `₱${subtotal.toFixed(2)}`;
+
+  // Tax row
+  const taxRow = document.getElementById('taxRow');
+  if (taxConfig.taxEnabled) {
+    taxRow.style.display = '';
+    document.getElementById('summaryTaxRate').textContent = taxConfig.taxRate;
+    document.getElementById('summaryTax').textContent =
+      taxConfig.taxMode === 'exclusive' ? `+₱${taxAmt.toFixed(2)}` : `(incl. ₱${taxAmt.toFixed(2)})`;
+  } else {
+    taxRow.style.display = 'none';
+  }
+
+  // Shipping row
+  document.getElementById('summaryShipping').textContent = shippingLabel;
+  const shippingRow = document.getElementById('shippingRow');
+  if (rule) {
+    shippingRow.style.display = '';
+  }
+
+  // Voucher row
+  if (appliedVoucher) {
+    document.getElementById('voucherRow').style.display = '';
+    document.getElementById('appliedVoucherCode').textContent = appliedVoucher.code;
+    document.getElementById('summaryDiscount').textContent = freeShip ? 'Free Shipping' : `-₱${discount.toFixed(2)}`;
+  } else {
+    document.getElementById('voucherRow').style.display = 'none';
+  }
+
+  document.getElementById('summaryTotal').textContent = `₱${total.toFixed(2)}`;
+
+  return { subtotal, discount, taxAmt, shippingFee, total };
+}
+
+// Apply voucher from input field
+async function applyVoucher() {
+  const code = document.getElementById('voucherCodeInput').value.trim().toUpperCase();
+  const msg  = document.getElementById('voucherMsg');
+  const btn  = document.getElementById('applyVoucherBtn');
+
+  if (!code) { msg.textContent = 'Please enter a voucher code.'; msg.style.color = 'red'; return; }
+
+  btn.textContent = 'Checking…'; btn.disabled = true;
+
+  try {
+    const subtotal = cartData?.total || 0;
+    const res  = await fetch('/api/vouchers/validate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ code, subtotal })
+    });
+    const data = await res.json();
+
+    if (!res.ok) {
+      msg.textContent = data.message;
+      msg.style.color = 'red';
+      appliedVoucher  = null;
+    } else {
+      appliedVoucher = { discountAmount: data.discountAmount, freeShipping: data.freeShipping, code: data.voucher.code };
+      msg.textContent = `✓ ${data.freeShipping ? 'Free shipping applied!' : `₱${data.discountAmount.toFixed(2)} discount applied!`}`;
+      msg.style.color = 'green';
+    }
+  } catch {
+    msg.textContent = 'Could not validate voucher. Try again.';
+    msg.style.color = 'red';
+    appliedVoucher  = null;
+  } finally {
+    btn.textContent = 'Apply'; btn.disabled = false;
+  }
+
+  computeCheckoutTotals();
+}
+
+// Update shipping when city changes
+function onCityChange(cityValue) {
+  checkoutCity = cityValue;
+  computeCheckoutTotals();
+}
+
+// Init on page load — add to your existing DOMContentLoaded / init function
+async function initCheckout() {
+  await Promise.all([loadCheckoutTaxSettings(), loadCheckoutShippingRules()]);
+  // Load cart (keep your existing loadCart() logic here)
+  // After cartData is set, call:
+  computeCheckoutTotals();
+}
+
+// Update the placeOrder function to include the new fields.
+// Find your existing placeOrder / submit handler and update the POST body:
+function buildOrderPayload() {
+  const totals = computeCheckoutTotals();
+  return {
+    // …your existing fields…
+    subtotal:    totals.subtotal,
+    discount:    totals.discount,
+    tax:         totals.taxAmt.toFixed(2),
+    shipping:    totals.shippingFee.toFixed(2),
+    total:       totals.total.toFixed(2),
+    voucherCode: appliedVoucher ? appliedVoucher.code : null
+  };
+}
+</script>

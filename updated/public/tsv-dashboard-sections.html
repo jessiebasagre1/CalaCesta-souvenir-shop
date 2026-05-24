@@ -1,0 +1,985 @@
+<!--
+  ══════════════════════════════════════════════════════════════════
+  TAX, SHIPPING & VOUCHER MANAGEMENT SECTIONS
+  Add these three blocks to public/business-dashboard.html
+
+  STEP 1 ─ Sidebar: Add these nav items inside the <nav class="sidebar-nav">
+           after the "Inventory" item, inside the "Store" section label block.
+
+  STEP 2 ─ Main: Add the three section divs inside <main class="main">,
+           alongside the other section divs.
+
+  STEP 3 ─ JS: Include the script block at the bottom, before </body>.
+  ══════════════════════════════════════════════════════════════════
+-->
+
+
+<!-- ═══ STEP 1: SIDEBAR NAV ITEMS ══════════════════════════════════════════ -->
+<!-- Paste these buttons inside sidebar-nav, after the Inventory nav-item    -->
+
+<button class="nav-item" onclick="showSection('shipping', this)">
+  <i class="fas fa-truck"></i><span>Shipping</span>
+</button>
+<button class="nav-item" onclick="showSection('tax', this)">
+  <i class="fas fa-percent"></i><span>Tax</span>
+</button>
+<button class="nav-item" onclick="showSection('vouchers', this)">
+  <i class="fas fa-ticket-alt"></i><span>Vouchers</span>
+</button>
+
+
+<!-- ═══ STEP 2A: SHIPPING SECTION ══════════════════════════════════════════ -->
+<!-- Paste this div inside <main class="main">, alongside other sections      -->
+
+<div id="shipping-section" class="section">
+  <div class="section-header" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:12px;">
+    <div>
+      <h2 style="font-size:20px;font-weight:800;color:var(--ink);margin:0;">Shipping Management</h2>
+      <p style="font-size:13px;color:var(--ink-muted);margin:4px 0 0;">Configure delivery rules and fees by region.</p>
+    </div>
+    <button class="btn btn-primary" onclick="openShippingModal()">
+      <i class="fas fa-plus"></i> Add Shipping Rule
+    </button>
+  </div>
+
+  <!-- Toolbar -->
+  <div class="inv-toolbar">
+    <div class="inv-search">
+      <i class="fas fa-search" style="color:#aaa;font-size:13px;"></i>
+      <input type="text" id="shippingSearch" placeholder="Search by region…" oninput="filterShippingTable()">
+    </div>
+    <select class="inv-filter" id="shippingStatusFilter" onchange="filterShippingTable()">
+      <option value="">All Status</option>
+      <option value="active">Active</option>
+      <option value="inactive">Inactive</option>
+    </select>
+  </div>
+
+  <!-- Table -->
+  <div class="inv-table-wrap">
+    <table class="inv-table" id="shippingTable">
+      <thead>
+        <tr>
+          <th>Region / Location</th>
+          <th>Shipping Fee</th>
+          <th>Free Shipping Min.</th>
+          <th>Est. Delivery</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="shippingTbody">
+        <tr id="shippingEmpty">
+          <td colspan="6" style="text-align:center;padding:48px 0;color:var(--ink-muted);">
+            <i class="fas fa-truck" style="font-size:32px;display:block;margin-bottom:10px;color:#ddd;"></i>
+            No shipping rules yet. Click <strong>Add Shipping Rule</strong> to get started.
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+
+<!-- ═══ STEP 2B: TAX SECTION ═══════════════════════════════════════════════ -->
+
+<div id="tax-section" class="section">
+  <div class="section-header" style="margin-bottom:24px;">
+    <h2 style="font-size:20px;font-weight:800;color:var(--ink);margin:0;">Tax Settings</h2>
+    <p style="font-size:13px;color:var(--ink-muted);margin:4px 0 0;">Configure the platform-wide tax rate applied at checkout.</p>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;max-width:860px;">
+
+    <!-- Settings Card -->
+    <div style="background:#fff;border-radius:var(--radius);border:1px solid #eee;padding:28px;">
+      <h3 style="font-size:15px;font-weight:700;margin-bottom:20px;color:var(--ink);">
+        <i class="fas fa-sliders-h" style="margin-right:8px;color:var(--orange);"></i>Tax Configuration
+      </h3>
+
+      <div style="margin-bottom:18px;">
+        <label style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#888;display:block;margin-bottom:6px;">
+          Tax Rate (%)
+        </label>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <input type="number" id="taxRateInput" min="0" max="100" step="0.1" value="12"
+            style="width:100px;height:40px;border:1px solid #eee;border-radius:8px;padding:0 12px;font-size:15px;font-weight:700;color:var(--ink);outline:none;"
+            oninput="updateTaxPreview()">
+          <span style="font-size:14px;color:var(--ink-muted);">%</span>
+        </div>
+      </div>
+
+      <div style="margin-bottom:18px;">
+        <label style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#888;display:block;margin-bottom:8px;">
+          Tax Mode
+        </label>
+        <label style="display:flex;align-items:center;gap:10px;cursor:pointer;margin-bottom:10px;">
+          <input type="radio" name="taxMode" value="exclusive" id="taxModeExclusive" checked
+            style="accent-color:var(--orange);" onchange="updateTaxPreview()">
+          <div>
+            <div style="font-size:13px;font-weight:600;color:var(--ink);">Added at checkout</div>
+            <div style="font-size:11px;color:var(--ink-muted);">Tax is calculated and added on top of item price</div>
+          </div>
+        </label>
+        <label style="display:flex;align-items:center;gap:10px;cursor:pointer;">
+          <input type="radio" name="taxMode" value="inclusive" id="taxModeInclusive"
+            style="accent-color:var(--orange);" onchange="updateTaxPreview()">
+          <div>
+            <div style="font-size:13px;font-weight:600;color:var(--ink);">Included in price</div>
+            <div style="font-size:11px;color:var(--ink-muted);">Tax is already embedded in the listed price</div>
+          </div>
+        </label>
+      </div>
+
+      <div style="margin-bottom:24px;display:flex;align-items:center;justify-content:space-between;">
+        <div>
+          <div style="font-size:13px;font-weight:600;color:var(--ink);">Enable Tax</div>
+          <div style="font-size:11px;color:var(--ink-muted);">Toggle to enable or disable tax collection</div>
+        </div>
+        <label class="tsv-toggle">
+          <input type="checkbox" id="taxEnabledToggle" checked onchange="updateTaxPreview()">
+          <span class="tsv-slider"></span>
+        </label>
+      </div>
+
+      <button class="btn btn-primary" onclick="saveTaxSettings()" style="width:100%;" id="saveTaxBtn">
+        <i class="fas fa-save"></i> Save Tax Settings
+      </button>
+    </div>
+
+    <!-- Preview Card -->
+    <div style="background:#fff;border-radius:var(--radius);border:1px solid #eee;padding:28px;">
+      <h3 style="font-size:15px;font-weight:700;margin-bottom:20px;color:var(--ink);">
+        <i class="fas fa-calculator" style="margin-right:8px;color:var(--orange);"></i>Live Preview
+      </h3>
+      <p style="font-size:12px;color:var(--ink-muted);margin-bottom:16px;">Based on a ₱1,000 order:</p>
+
+      <div id="taxPreview" style="background:var(--sand);border-radius:10px;padding:18px;">
+        <div style="display:flex;justify-content:space-between;margin-bottom:10px;font-size:13px;">
+          <span style="color:var(--ink-muted);">Subtotal</span>
+          <span style="font-weight:600;">₱1,000.00</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:10px;font-size:13px;" id="previewTaxRow">
+          <span style="color:var(--ink-muted);">Tax (<span id="previewRate">12</span>%)</span>
+          <span style="font-weight:600;color:var(--orange);" id="previewTaxAmt">+₱120.00</span>
+        </div>
+        <div style="border-top:1px solid #e0d9cc;margin:12px 0;"></div>
+        <div style="display:flex;justify-content:space-between;font-size:15px;font-weight:800;">
+          <span>Total</span>
+          <span id="previewTotal">₱1,120.00</span>
+        </div>
+        <div id="previewNote" style="font-size:11px;color:var(--ink-muted);margin-top:10px;"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══ STEP 2C: VOUCHER SECTION ═══════════════════════════════════════════ -->
+
+<div id="vouchers-section" class="section">
+  <div class="section-header" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:12px;">
+    <div>
+      <h2 style="font-size:20px;font-weight:800;color:var(--ink);margin:0;">Voucher Management</h2>
+      <p style="font-size:13px;color:var(--ink-muted);margin:4px 0 0;">Create and manage discount codes for your store.</p>
+    </div>
+    <button class="btn btn-primary" onclick="openVoucherModal()">
+      <i class="fas fa-plus"></i> Create Voucher
+    </button>
+  </div>
+
+  <!-- Toolbar -->
+  <div class="inv-toolbar">
+    <div class="inv-search">
+      <i class="fas fa-search" style="color:#aaa;font-size:13px;"></i>
+      <input type="text" id="voucherSearch" placeholder="Search voucher code…" oninput="filterVoucherTable()">
+    </div>
+    <select class="inv-filter" id="voucherTypeFilter" onchange="filterVoucherTable()">
+      <option value="">All Types</option>
+      <option value="percentage">Percentage</option>
+      <option value="fixed">Fixed Amount</option>
+      <option value="free_shipping">Free Shipping</option>
+    </select>
+    <select class="inv-filter" id="voucherStatusFilter" onchange="filterVoucherTable()">
+      <option value="">All Status</option>
+      <option value="active">Active</option>
+      <option value="inactive">Inactive</option>
+      <option value="expired">Expired</option>
+    </select>
+  </div>
+
+  <!-- Table -->
+  <div class="inv-table-wrap">
+    <table class="inv-table" id="voucherTable">
+      <thead>
+        <tr>
+          <th>Code</th>
+          <th>Type</th>
+          <th>Discount</th>
+          <th>Min. Spend</th>
+          <th>Expires</th>
+          <th>Usage</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="voucherTbody">
+        <tr id="voucherEmpty">
+          <td colspan="8" style="text-align:center;padding:48px 0;color:var(--ink-muted);">
+            <i class="fas fa-ticket-alt" style="font-size:32px;display:block;margin-bottom:10px;color:#ddd;"></i>
+            No vouchers yet. Click <strong>Create Voucher</strong> to get started.
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+
+<!-- ═══ MODALS ═══════════════════════════════════════════════════════════════ -->
+
+<!-- Shipping Modal -->
+<div id="shippingModal" class="tsv-modal-overlay" onclick="closeShippingModal(event)">
+  <div class="tsv-modal" onclick="event.stopPropagation()">
+    <div class="tsv-modal-header">
+      <h3 id="shippingModalTitle">Add Shipping Rule</h3>
+      <button class="tsv-modal-close" onclick="closeShippingModal()"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="tsv-modal-body">
+      <input type="hidden" id="shippingEditId">
+      <div class="tsv-field">
+        <label>Region / Location <span class="tsv-req">*</span></label>
+        <input type="text" id="sRegion" placeholder="e.g. Metro Manila, Luzon, Nationwide">
+      </div>
+      <div class="tsv-field-row">
+        <div class="tsv-field">
+          <label>Shipping Fee (₱) <span class="tsv-req">*</span></label>
+          <input type="number" id="sFee" min="0" step="0.01" placeholder="0.00">
+        </div>
+        <div class="tsv-field">
+          <label>Free Shipping Min. Spend (₱)</label>
+          <input type="number" id="sFreeMin" min="0" step="0.01" placeholder="0 = disabled">
+        </div>
+      </div>
+      <div class="tsv-field">
+        <label>Estimated Delivery Days <span class="tsv-req">*</span></label>
+        <input type="text" id="sEstDays" placeholder="e.g. 3-5 days, 1-2 days">
+      </div>
+      <div class="tsv-field tsv-field-inline">
+        <label>Active</label>
+        <label class="tsv-toggle">
+          <input type="checkbox" id="sIsActive" checked>
+          <span class="tsv-slider"></span>
+        </label>
+      </div>
+    </div>
+    <div class="tsv-modal-footer">
+      <button class="btn btn-ghost" onclick="closeShippingModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveShippingRule()" id="saveShippingBtn">
+        <i class="fas fa-save"></i> Save Rule
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Voucher Modal -->
+<div id="voucherModal" class="tsv-modal-overlay" onclick="closeVoucherModal(event)">
+  <div class="tsv-modal" onclick="event.stopPropagation()">
+    <div class="tsv-modal-header">
+      <h3 id="voucherModalTitle">Create Voucher</h3>
+      <button class="tsv-modal-close" onclick="closeVoucherModal()"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="tsv-modal-body">
+      <input type="hidden" id="voucherEditId">
+      <div class="tsv-field-row">
+        <div class="tsv-field">
+          <label>Voucher Code <span class="tsv-req">*</span></label>
+          <div style="display:flex;gap:8px;">
+            <input type="text" id="vCode" placeholder="SAVE20" style="text-transform:uppercase;flex:1;">
+            <button class="btn btn-ghost" onclick="generateVoucherCode()" title="Generate random code"
+              style="padding:0 12px;height:40px;flex-shrink:0;"><i class="fas fa-random"></i></button>
+          </div>
+        </div>
+        <div class="tsv-field">
+          <label>Discount Type <span class="tsv-req">*</span></label>
+          <select id="vType" onchange="onVoucherTypeChange()">
+            <option value="percentage">Percentage (%)</option>
+            <option value="fixed">Fixed Amount (₱)</option>
+            <option value="free_shipping">Free Shipping</option>
+          </select>
+        </div>
+      </div>
+      <div class="tsv-field-row" id="vValueRow">
+        <div class="tsv-field">
+          <label id="vValueLabel">Discount Value <span class="tsv-req">*</span></label>
+          <input type="number" id="vValue" min="0" step="0.01" placeholder="0">
+        </div>
+        <div class="tsv-field" id="vMaxDiscountField">
+          <label>Max Discount (₱)</label>
+          <input type="number" id="vMaxDiscount" min="0" step="0.01" placeholder="Leave blank for no cap">
+        </div>
+      </div>
+      <div class="tsv-field-row">
+        <div class="tsv-field">
+          <label>Minimum Spend (₱)</label>
+          <input type="number" id="vMinSpend" min="0" step="0.01" placeholder="0 = no minimum">
+        </div>
+        <div class="tsv-field">
+          <label>Expiration Date</label>
+          <input type="date" id="vExpiresAt">
+        </div>
+      </div>
+      <div class="tsv-field-row">
+        <div class="tsv-field">
+          <label>Usage Limit</label>
+          <input type="number" id="vUsageLimit" min="1" step="1" placeholder="Leave blank = unlimited">
+        </div>
+        <div class="tsv-field tsv-field-inline" style="align-self:flex-end;padding-bottom:4px;">
+          <label>Active</label>
+          <label class="tsv-toggle">
+            <input type="checkbox" id="vIsActive" checked>
+            <span class="tsv-slider"></span>
+          </label>
+        </div>
+      </div>
+    </div>
+    <div class="tsv-modal-footer">
+      <button class="btn btn-ghost" onclick="closeVoucherModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveVoucher()" id="saveVoucherBtn">
+        <i class="fas fa-save"></i> Save Voucher
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Delete Confirmation Modal (shared) -->
+<div id="deleteConfirmModal" class="tsv-modal-overlay" onclick="closeDeleteConfirm(event)">
+  <div class="tsv-modal" style="max-width:420px;" onclick="event.stopPropagation()">
+    <div class="tsv-modal-header">
+      <h3 id="deleteConfirmTitle">Confirm Delete</h3>
+      <button class="tsv-modal-close" onclick="closeDeleteConfirm()"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="tsv-modal-body">
+      <div style="text-align:center;padding:16px 0;">
+        <div style="width:56px;height:56px;border-radius:50%;background:var(--red-pale);display:flex;align-items:center;justify-content:center;margin:0 auto 14px;">
+          <i class="fas fa-trash-alt" style="color:var(--red);font-size:22px;"></i>
+        </div>
+        <p id="deleteConfirmMsg" style="font-size:14px;color:var(--ink-soft);margin:0;line-height:1.6;"></p>
+      </div>
+    </div>
+    <div class="tsv-modal-footer">
+      <button class="btn btn-ghost" onclick="closeDeleteConfirm()">Cancel</button>
+      <button class="btn" id="deleteConfirmBtn"
+        style="background:var(--red);color:#fff;border-color:var(--red);">
+        <i class="fas fa-trash-alt"></i> Delete
+      </button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══ STEP 3: CSS (add to <style> block or admin-dashboard.css) ════════════ -->
+<style>
+/* ── Shared TSV (Tax/Shipping/Voucher) styles ─────────────────────────── */
+.tsv-modal-overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(28,25,23,.45); backdrop-filter: blur(3px);
+  z-index: 9000; align-items: center; justify-content: center;
+}
+.tsv-modal-overlay.open { display: flex; }
+.tsv-modal {
+  background: #fff; border-radius: var(--radius); box-shadow: var(--shadow-lg);
+  width: 100%; max-width: 560px; max-height: 90vh; overflow-y: auto;
+  animation: tsvSlideIn .18s ease;
+  margin: 16px;
+}
+@keyframes tsvSlideIn {
+  from { opacity:0; transform:translateY(-12px) scale(.98); }
+  to   { opacity:1; transform:none; }
+}
+.tsv-modal-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 20px 24px 16px; border-bottom: 1px solid #f0f0f0;
+}
+.tsv-modal-header h3 { font-size: 16px; font-weight: 800; color: var(--ink); margin: 0; }
+.tsv-modal-close {
+  width: 32px; height: 32px; border-radius: 8px; border: none;
+  background: #f5f5f5; color: #888; cursor: pointer; font-size: 13px;
+  display: flex; align-items: center; justify-content: center;
+  transition: var(--transition);
+}
+.tsv-modal-close:hover { background: var(--red-pale); color: var(--red); }
+.tsv-modal-body { padding: 20px 24px; display: flex; flex-direction: column; gap: 14px; }
+.tsv-modal-footer {
+  display: flex; justify-content: flex-end; gap: 10px;
+  padding: 16px 24px 20px; border-top: 1px solid #f0f0f0;
+}
+.tsv-field { display: flex; flex-direction: column; gap: 5px; flex: 1; }
+.tsv-field label { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: #888; }
+.tsv-field input, .tsv-field select {
+  height: 40px; border: 1px solid #eee; border-radius: 8px; padding: 0 12px;
+  font-size: 13px; color: var(--ink); outline: none; background: #fff;
+  transition: border-color .15s;
+}
+.tsv-field input:focus, .tsv-field select:focus { border-color: var(--orange); box-shadow: 0 0 0 3px var(--orange-pale); }
+.tsv-field-row { display: flex; gap: 12px; }
+.tsv-field-inline { flex-direction: row !important; align-items: center; justify-content: space-between; }
+.tsv-req { color: var(--red); }
+
+/* Toggle switch */
+.tsv-toggle { position: relative; width: 44px; height: 24px; cursor: pointer; flex-shrink:0; }
+.tsv-toggle input { opacity: 0; width: 0; height: 0; }
+.tsv-slider {
+  position: absolute; inset: 0; background: #ddd; border-radius: 99px;
+  transition: .2s;
+}
+.tsv-slider::before {
+  content: ''; position: absolute;
+  width: 18px; height: 18px; border-radius: 50%;
+  left: 3px; top: 3px; background: #fff;
+  transition: .2s; box-shadow: 0 1px 4px rgba(0,0,0,.2);
+}
+.tsv-toggle input:checked + .tsv-slider { background: var(--orange); }
+.tsv-toggle input:checked + .tsv-slider::before { transform: translateX(20px); }
+
+/* Status badges */
+.tsv-badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 99px;
+}
+.tsv-badge.active   { background: var(--green-pale);  color: var(--green); }
+.tsv-badge.inactive { background: #f5f5f5;             color: #999; }
+.tsv-badge.expired  { background: var(--red-pale);     color: var(--red); }
+.tsv-badge.pct      { background: var(--blue-pale);    color: var(--blue); }
+.tsv-badge.fixed    { background: var(--orange-pale);  color: var(--orange); }
+.tsv-badge.fs       { background: var(--green-pale);   color: var(--green); }
+
+/* Action buttons in table */
+.tsv-action-btn {
+  width: 30px; height: 30px; border-radius: 7px; border: 1px solid #eee;
+  background: #fff; cursor: pointer; font-size: 12px;
+  display: inline-flex; align-items: center; justify-content: center;
+  transition: var(--transition); color: var(--ink-muted);
+}
+.tsv-action-btn:hover { border-color: var(--orange); color: var(--orange); background: var(--orange-pale); }
+.tsv-action-btn.del:hover { border-color: var(--red); color: var(--red); background: var(--red-pale); }
+
+/* Copy code button */
+.tsv-copy-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-family: monospace; font-size: 13px; font-weight: 700;
+  background: var(--sand); border: 1px solid var(--sand-dark);
+  border-radius: 6px; padding: 3px 8px; cursor: pointer; color: var(--ink);
+  transition: var(--transition); white-space: nowrap;
+}
+.tsv-copy-btn:hover { background: var(--orange-pale); border-color: var(--orange); }
+
+/* Toast */
+.tsv-toast-container {
+  position: fixed; bottom: 24px; right: 24px;
+  display: flex; flex-direction: column; gap: 8px; z-index: 99999;
+  pointer-events: none;
+}
+.tsv-toast {
+  background: var(--ink); color: #fff; border-radius: 10px;
+  padding: 12px 18px; font-size: 13px; font-weight: 600;
+  display: flex; align-items: center; gap: 10px;
+  box-shadow: var(--shadow-lg); pointer-events: all;
+  animation: toastIn .2s ease;
+  max-width: 320px;
+}
+@keyframes toastIn { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:none; } }
+.tsv-toast.success { border-left: 3px solid #52b788; }
+.tsv-toast.error   { border-left: 3px solid var(--red); }
+.tsv-toast.info    { border-left: 3px solid var(--blue); }
+
+/* Responsive tweaks */
+@media (max-width: 600px) {
+  .tsv-field-row { flex-direction: column; }
+  .tsv-modal { margin: 8px; }
+}
+</style>
+
+
+<!-- ═══ STEP 4: JAVASCRIPT ════════════════════════════════════════════════ -->
+<!-- Paste this <script> block before </body> in business-dashboard.html    -->
+<script>
+/* ═══════════════════════════════════════════════════════════════════════════
+   TAX / SHIPPING / VOUCHER MANAGEMENT JS
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+// ── Toast ────────────────────────────────────────────────────────────────────
+
+(function setupToastContainer() {
+  if (document.getElementById('tsvToastContainer')) return;
+  const c = document.createElement('div');
+  c.id = 'tsvToastContainer';
+  c.className = 'tsv-toast-container';
+  document.body.appendChild(c);
+})();
+
+function showToast(msg, type = 'success', duration = 3000) {
+  const icons = { success: 'fa-check-circle', error: 'fa-times-circle', info: 'fa-info-circle' };
+  const t = document.createElement('div');
+  t.className = `tsv-toast ${type}`;
+  t.innerHTML = `<i class="fas ${icons[type] || 'fa-info-circle'}"></i> ${msg}`;
+  const c = document.getElementById('tsvToastContainer');
+  c.appendChild(t);
+  setTimeout(() => { t.style.opacity = '0'; t.style.transform = 'translateY(10px)'; t.style.transition = '.3s'; setTimeout(() => t.remove(), 300); }, duration);
+}
+
+// ── Auth helper ───────────────────────────────────────────────────────────────
+
+function authHeaders() {
+  const token = localStorage.getItem('token');
+  return { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) };
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+//  SHIPPING
+// ──────────────────────────────────────────────────────────────────────────────
+
+let shippingRules = [];
+
+async function loadShippingRules() {
+  try {
+    const res = await fetch('/api/shipping');
+    shippingRules = await res.json();
+    renderShippingTable(shippingRules);
+  } catch {
+    showToast('Failed to load shipping rules.', 'error');
+  }
+}
+
+function renderShippingTable(rules) {
+  const tbody = document.getElementById('shippingTbody');
+  if (!rules.length) {
+    tbody.innerHTML = `<tr id="shippingEmpty"><td colspan="6" style="text-align:center;padding:48px 0;color:var(--ink-muted);">
+      <i class="fas fa-truck" style="font-size:32px;display:block;margin-bottom:10px;color:#ddd;"></i>
+      No shipping rules found.</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = rules.map(r => `
+    <tr data-id="${r._id}">
+      <td><strong>${r.region}</strong></td>
+      <td>₱${Number(r.fee).toFixed(2)}</td>
+      <td>${r.freeShippingMinSpend > 0 ? `₱${Number(r.freeShippingMinSpend).toFixed(2)}` : '<span style="color:#aaa">—</span>'}</td>
+      <td>${r.estimatedDays}</td>
+      <td>
+        <label class="tsv-toggle" title="${r.isActive ? 'Active' : 'Inactive'}">
+          <input type="checkbox" ${r.isActive ? 'checked' : ''} onchange="toggleShippingRule('${r._id}', this)">
+          <span class="tsv-slider"></span>
+        </label>
+      </td>
+      <td style="display:flex;gap:6px;align-items:center;">
+        <button class="tsv-action-btn" onclick="openShippingModal('${r._id}')" title="Edit"><i class="fas fa-pen"></i></button>
+        <button class="tsv-action-btn del" onclick="confirmDelete('shipping','${r._id}','Shipping rule for <strong>${r.region}</strong>')" title="Delete"><i class="fas fa-trash-alt"></i></button>
+      </td>
+    </tr>`).join('');
+}
+
+function filterShippingTable() {
+  const q = document.getElementById('shippingSearch').value.toLowerCase();
+  const s = document.getElementById('shippingStatusFilter').value;
+  const filtered = shippingRules.filter(r => {
+    const matchQ = r.region.toLowerCase().includes(q);
+    const matchS = !s || (s === 'active' ? r.isActive : !r.isActive);
+    return matchQ && matchS;
+  });
+  renderShippingTable(filtered);
+}
+
+function openShippingModal(id = null) {
+  document.getElementById('shippingModalTitle').textContent = id ? 'Edit Shipping Rule' : 'Add Shipping Rule';
+  document.getElementById('shippingEditId').value = id || '';
+  if (id) {
+    const r = shippingRules.find(x => x._id === id);
+    if (r) {
+      document.getElementById('sRegion').value  = r.region;
+      document.getElementById('sFee').value     = r.fee;
+      document.getElementById('sFreeMin').value = r.freeShippingMinSpend || '';
+      document.getElementById('sEstDays').value = r.estimatedDays;
+      document.getElementById('sIsActive').checked = r.isActive;
+    }
+  } else {
+    ['sRegion','sFee','sFreeMin','sEstDays'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('sIsActive').checked = true;
+  }
+  document.getElementById('shippingModal').classList.add('open');
+}
+
+function closeShippingModal(e) {
+  if (e && e.target !== document.getElementById('shippingModal')) return;
+  document.getElementById('shippingModal').classList.remove('open');
+}
+
+async function saveShippingRule() {
+  const id     = document.getElementById('shippingEditId').value;
+  const region = document.getElementById('sRegion').value.trim();
+  const fee    = document.getElementById('sFee').value;
+  const freeMin= document.getElementById('sFreeMin').value;
+  const estDays= document.getElementById('sEstDays').value.trim();
+  const active = document.getElementById('sIsActive').checked;
+
+  if (!region) return showToast('Region is required.', 'error');
+  if (fee === '' || isNaN(fee) || Number(fee) < 0) return showToast('Enter a valid shipping fee.', 'error');
+  if (!estDays) return showToast('Estimated delivery days is required.', 'error');
+
+  const btn = document.getElementById('saveShippingBtn');
+  btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving…';
+
+  const body = { region, fee: Number(fee), freeShippingMinSpend: Number(freeMin) || 0, estimatedDays: estDays, isActive: active };
+  const url    = id ? `/api/shipping/${id}` : '/api/shipping';
+  const method = id ? 'PUT' : 'POST';
+
+  try {
+    const res = await fetch(url, { method, headers: authHeaders(), body: JSON.stringify(body) });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message);
+    showToast(id ? 'Shipping rule updated!' : 'Shipping rule added!', 'success');
+    document.getElementById('shippingModal').classList.remove('open');
+    loadShippingRules();
+  } catch (err) {
+    showToast(err.message || 'Save failed.', 'error');
+  } finally {
+    btn.disabled = false; btn.innerHTML = '<i class="fas fa-save"></i> Save Rule';
+  }
+}
+
+async function toggleShippingRule(id, checkbox) {
+  try {
+    const res = await fetch(`/api/shipping/${id}/toggle`, { method: 'PATCH', headers: authHeaders() });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message);
+    // Update local state
+    const rule = shippingRules.find(r => r._id === id);
+    if (rule) rule.isActive = data.rule.isActive;
+    showToast(`Rule ${data.rule.isActive ? 'activated' : 'deactivated'}.`, 'info');
+  } catch (err) {
+    checkbox.checked = !checkbox.checked; // revert
+    showToast(err.message || 'Toggle failed.', 'error');
+  }
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+//  TAX
+// ──────────────────────────────────────────────────────────────────────────────
+
+async function loadTaxSettings() {
+  try {
+    const res = await fetch('/api/tax');
+    const data = await res.json();
+    document.getElementById('taxRateInput').value = data.taxRate ?? 12;
+    document.getElementById('taxEnabledToggle').checked = data.taxEnabled !== false;
+    const modeEl = document.querySelector(`input[name="taxMode"][value="${data.taxMode || 'exclusive'}"]`);
+    if (modeEl) modeEl.checked = true;
+    updateTaxPreview();
+  } catch {
+    showToast('Could not load tax settings.', 'error');
+  }
+}
+
+function updateTaxPreview() {
+  const rate    = parseFloat(document.getElementById('taxRateInput').value) || 0;
+  const enabled = document.getElementById('taxEnabledToggle').checked;
+  const mode    = document.querySelector('input[name="taxMode"]:checked')?.value || 'exclusive';
+  const base    = 1000;
+
+  document.getElementById('previewRate').textContent = rate;
+
+  const row  = document.getElementById('previewTaxRow');
+  const note = document.getElementById('previewNote');
+  let tax = 0, total = base;
+
+  if (enabled) {
+    if (mode === 'exclusive') {
+      tax   = base * (rate / 100);
+      total = base + tax;
+      note.textContent = 'Tax is added on top of the listed price.';
+    } else {
+      tax   = base - (base / (1 + rate / 100));
+      total = base;
+      note.textContent = 'Tax is already included in the listed price.';
+    }
+    row.style.display = '';
+    document.getElementById('previewTaxAmt').textContent = (mode === 'exclusive' ? '+' : '') + '₱' + tax.toFixed(2);
+  } else {
+    row.style.display = 'none';
+    note.textContent  = 'Tax is currently disabled.';
+  }
+
+  document.getElementById('previewTotal').textContent = '₱' + total.toFixed(2);
+}
+
+async function saveTaxSettings() {
+  const rate    = parseFloat(document.getElementById('taxRateInput').value);
+  const enabled = document.getElementById('taxEnabledToggle').checked;
+  const mode    = document.querySelector('input[name="taxMode"]:checked')?.value || 'exclusive';
+
+  if (isNaN(rate) || rate < 0 || rate > 100) return showToast('Tax rate must be between 0 and 100.', 'error');
+
+  const btn = document.getElementById('saveTaxBtn');
+  btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving…';
+
+  try {
+    const res = await fetch('/api/tax', {
+      method: 'PUT', headers: authHeaders(),
+      body: JSON.stringify({ taxRate: rate, taxEnabled: enabled, taxMode: mode })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message);
+    showToast('Tax settings saved!', 'success');
+  } catch (err) {
+    showToast(err.message || 'Save failed.', 'error');
+  } finally {
+    btn.disabled = false; btn.innerHTML = '<i class="fas fa-save"></i> Save Tax Settings';
+  }
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+//  VOUCHERS
+// ──────────────────────────────────────────────────────────────────────────────
+
+let allVouchers = [];
+
+async function loadVouchers() {
+  try {
+    const res = await fetch('/api/vouchers', { headers: authHeaders() });
+    allVouchers = await res.json();
+    renderVoucherTable(allVouchers);
+  } catch {
+    showToast('Failed to load vouchers.', 'error');
+  }
+}
+
+function voucherIsExpired(v) {
+  return v.expiresAt && new Date() > new Date(v.expiresAt);
+}
+
+function renderVoucherTable(vouchers) {
+  const tbody = document.getElementById('voucherTbody');
+  if (!vouchers.length) {
+    tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:48px 0;color:var(--ink-muted);">
+      <i class="fas fa-ticket-alt" style="font-size:32px;display:block;margin-bottom:10px;color:#ddd;"></i>
+      No vouchers found.</td></tr>`;
+    return;
+  }
+
+  const typeLabels = { percentage: ['pct','%'], fixed: ['fixed','₱'], free_shipping: ['fs','Ship'] };
+
+  tbody.innerHTML = vouchers.map(v => {
+    const expired   = voucherIsExpired(v);
+    const statusCls = expired ? 'expired' : (v.isActive ? 'active' : 'inactive');
+    const statusTxt = expired ? 'Expired' : (v.isActive ? 'Active' : 'Inactive');
+    const [tClass, tSymbol] = typeLabels[v.type] || ['pct','%'];
+    const discountTxt = v.type === 'free_shipping' ? 'Free Shipping'
+      : v.type === 'percentage' ? `${v.value}% off`
+      : `₱${Number(v.value).toFixed(2)} off`;
+    const expTxt = v.expiresAt
+      ? `<span style="color:${expired ? 'var(--red)' : 'inherit'}">${new Date(v.expiresAt).toLocaleDateString('en-PH',{month:'short',day:'numeric',year:'numeric'})}</span>`
+      : '<span style="color:#aaa">No expiry</span>';
+    const usageTxt = v.usageLimit ? `${v.usageCount}/${v.usageLimit}` : `${v.usageCount} used`;
+
+    return `<tr>
+      <td>
+        <button class="tsv-copy-btn" onclick="copyVoucherCode('${v.code}',this)" title="Click to copy">
+          <i class="fas fa-copy" style="font-size:11px;"></i> ${v.code}
+        </button>
+      </td>
+      <td><span class="tsv-badge ${tClass}">${v.type.replace('_',' ')}</span></td>
+      <td style="font-weight:600;">${discountTxt}</td>
+      <td>${v.minSpend > 0 ? `₱${Number(v.minSpend).toFixed(2)}` : '<span style="color:#aaa">—</span>'}</td>
+      <td>${expTxt}</td>
+      <td style="color:var(--ink-muted);font-size:13px;">${usageTxt}</td>
+      <td><span class="tsv-badge ${statusCls}">${statusTxt}</span></td>
+      <td style="display:flex;gap:6px;">
+        <button class="tsv-action-btn" onclick="openVoucherModal('${v._id}')" title="Edit" ${expired ? 'disabled' : ''}><i class="fas fa-pen"></i></button>
+        <button class="tsv-action-btn" onclick="toggleVoucher('${v._id}')" title="${v.isActive ? 'Deactivate' : 'Activate'}">
+          <i class="fas ${v.isActive ? 'fa-pause' : 'fa-play'}"></i></button>
+        <button class="tsv-action-btn del" onclick="confirmDelete('voucher','${v._id}','Voucher <strong>${v.code}</strong>')" title="Delete"><i class="fas fa-trash-alt"></i></button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function filterVoucherTable() {
+  const q    = document.getElementById('voucherSearch').value.toLowerCase();
+  const type = document.getElementById('voucherTypeFilter').value;
+  const stat = document.getElementById('voucherStatusFilter').value;
+  const filtered = allVouchers.filter(v => {
+    const expired = voucherIsExpired(v);
+    const matchQ  = v.code.toLowerCase().includes(q);
+    const matchT  = !type || v.type === type;
+    const matchS  = !stat
+      || (stat === 'active'   &&  v.isActive && !expired)
+      || (stat === 'inactive' && !v.isActive && !expired)
+      || (stat === 'expired'  &&  expired);
+    return matchQ && matchT && matchS;
+  });
+  renderVoucherTable(filtered);
+}
+
+function openVoucherModal(id = null) {
+  document.getElementById('voucherModalTitle').textContent = id ? 'Edit Voucher' : 'Create Voucher';
+  document.getElementById('voucherEditId').value = id || '';
+  onVoucherTypeChange(); // reset visibility
+  if (id) {
+    const v = allVouchers.find(x => x._id === id);
+    if (v) {
+      document.getElementById('vCode').value        = v.code;
+      document.getElementById('vType').value        = v.type;
+      document.getElementById('vValue').value       = v.value;
+      document.getElementById('vMaxDiscount').value = v.maxDiscount ?? '';
+      document.getElementById('vMinSpend').value    = v.minSpend   || '';
+      document.getElementById('vExpiresAt').value   = v.expiresAt ? v.expiresAt.slice(0,10) : '';
+      document.getElementById('vUsageLimit').value  = v.usageLimit ?? '';
+      document.getElementById('vIsActive').checked  = v.isActive;
+      onVoucherTypeChange();
+    }
+  } else {
+    ['vCode','vValue','vMaxDiscount','vMinSpend','vExpiresAt','vUsageLimit'].forEach(i => document.getElementById(i).value = '');
+    document.getElementById('vType').value = 'percentage';
+    document.getElementById('vIsActive').checked = true;
+    onVoucherTypeChange();
+  }
+  document.getElementById('voucherModal').classList.add('open');
+}
+
+function closeVoucherModal(e) {
+  if (e && e.target !== document.getElementById('voucherModal')) return;
+  document.getElementById('voucherModal').classList.remove('open');
+}
+
+function onVoucherTypeChange() {
+  const type = document.getElementById('vType').value;
+  const isFreeShip = type === 'free_shipping';
+  document.getElementById('vValueRow').style.display    = isFreeShip ? 'none' : '';
+  document.getElementById('vMaxDiscountField').style.display = type === 'percentage' ? '' : 'none';
+  document.getElementById('vValueLabel').innerHTML      = type === 'percentage'
+    ? 'Discount (%) <span class="tsv-req">*</span>'
+    : 'Discount Amount (₱) <span class="tsv-req">*</span>';
+}
+
+function generateVoucherCode() {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  let code = '';
+  for (let i = 0; i < 8; i++) code += chars[Math.floor(Math.random() * chars.length)];
+  document.getElementById('vCode').value = code;
+}
+
+function copyVoucherCode(code, btn) {
+  navigator.clipboard.writeText(code).then(() => {
+    const orig = btn.innerHTML;
+    btn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+    setTimeout(() => btn.innerHTML = orig, 1800);
+  });
+}
+
+async function saveVoucher() {
+  const id   = document.getElementById('voucherEditId').value;
+  const type = document.getElementById('vType').value;
+  const code = document.getElementById('vCode').value.trim().toUpperCase();
+  const val  = document.getElementById('vValue').value;
+
+  if (!code) return showToast('Voucher code is required.', 'error');
+  if (type !== 'free_shipping' && (val === '' || isNaN(val) || Number(val) < 0))
+    return showToast('Enter a valid discount value.', 'error');
+  if (type === 'percentage' && Number(val) > 100)
+    return showToast('Percentage cannot exceed 100%.', 'error');
+
+  const btn = document.getElementById('saveVoucherBtn');
+  btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving…';
+
+  const body = {
+    code, type,
+    value:       type === 'free_shipping' ? 0 : Number(val),
+    maxDiscount: document.getElementById('vMaxDiscount').value !== '' ? Number(document.getElementById('vMaxDiscount').value) : null,
+    minSpend:    Number(document.getElementById('vMinSpend').value)   || 0,
+    expiresAt:   document.getElementById('vExpiresAt').value          || null,
+    usageLimit:  document.getElementById('vUsageLimit').value !== ''  ? Number(document.getElementById('vUsageLimit').value) : null,
+    isActive:    document.getElementById('vIsActive').checked
+  };
+
+  const url    = id ? `/api/vouchers/${id}` : '/api/vouchers';
+  const method = id ? 'PUT' : 'POST';
+
+  try {
+    const res  = await fetch(url, { method, headers: authHeaders(), body: JSON.stringify(body) });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message);
+    showToast(id ? 'Voucher updated!' : 'Voucher created!', 'success');
+    document.getElementById('voucherModal').classList.remove('open');
+    loadVouchers();
+  } catch (err) {
+    showToast(err.message || 'Save failed.', 'error');
+  } finally {
+    btn.disabled = false; btn.innerHTML = '<i class="fas fa-save"></i> Save Voucher';
+  }
+}
+
+async function toggleVoucher(id) {
+  try {
+    const res  = await fetch(`/api/vouchers/${id}/toggle`, { method: 'PATCH', headers: authHeaders() });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message);
+    showToast(data.message, 'info');
+    loadVouchers();
+  } catch (err) {
+    showToast(err.message || 'Toggle failed.', 'error');
+  }
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+//  SHARED DELETE CONFIRM
+// ──────────────────────────────────────────────────────────────────────────────
+
+let _deleteTarget = null;
+
+function confirmDelete(kind, id, label) {
+  _deleteTarget = { kind, id };
+  document.getElementById('deleteConfirmTitle').textContent = `Delete ${kind === 'shipping' ? 'Shipping Rule' : 'Voucher'}`;
+  document.getElementById('deleteConfirmMsg').innerHTML = `Are you sure you want to delete ${label}? This action cannot be undone.`;
+  const btn = document.getElementById('deleteConfirmBtn');
+  btn.onclick = executeDelete;
+  document.getElementById('deleteConfirmModal').classList.add('open');
+}
+
+function closeDeleteConfirm(e) {
+  if (e && e.target !== document.getElementById('deleteConfirmModal')) return;
+  document.getElementById('deleteConfirmModal').classList.remove('open');
+  _deleteTarget = null;
+}
+
+async function executeDelete() {
+  if (!_deleteTarget) return;
+  const { kind, id } = _deleteTarget;
+  const url = kind === 'shipping' ? `/api/shipping/${id}` : `/api/vouchers/${id}`;
+  try {
+    const res = await fetch(url, { method: 'DELETE', headers: authHeaders() });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message);
+    showToast(data.message, 'success');
+    document.getElementById('deleteConfirmModal').classList.remove('open');
+    _deleteTarget = null;
+    kind === 'shipping' ? loadShippingRules() : loadVouchers();
+  } catch (err) {
+    showToast(err.message || 'Delete failed.', 'error');
+  }
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+//  SECTION LOAD HOOK — integrate with existing showSection()
+// ──────────────────────────────────────────────────────────────────────────────
+// Patch the existing showSection function to lazy-load data for new sections.
+// Place this AFTER the existing showSection definition in the file, or wrap it.
+
+(function patchShowSection() {
+  const _original = typeof showSection === 'function' ? showSection : null;
+  window.showSection = function(name, btn) {
+    if (_original) _original(name, btn);
+    if (name === 'shipping') loadShippingRules();
+    if (name === 'tax')      loadTaxSettings();
+    if (name === 'vouchers') loadVouchers();
+  };
+})();
+</script>

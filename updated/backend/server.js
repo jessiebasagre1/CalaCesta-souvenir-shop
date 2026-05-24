@@ -17,7 +17,9 @@ const shopRoutes          = require('./routes/shop');
 const uploadRoutes        = require('./routes/upload');
 const storeSettingsRoutes = require('./routes/storeSettings'); 
 const paymentRoutes = require('./routes/payments');  
-
+const shippingRoutes = require('./routes/shipping');
+const taxRoutes      = require('./routes/tax');
+const voucherRoutes  = require('./routes/vouchers');
 const app  = express();
 const PORT = process.env.PORT || 3000;
 
@@ -26,6 +28,7 @@ app.use(cors({ origin: '*' }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, '../public')));
+app.use('/uploads', express.static(path.join(__dirname, 'public', 'uploads')));
 
 // ── Routes ────────────────────────────────────────────────────────────────────
 app.use('/api/auth',           authRoutes);
@@ -37,7 +40,10 @@ app.use('/api/business',       businessRoutes);
 app.use('/api/upload',         uploadRoutes);
 app.use('/api/store-settings', storeSettingsRoutes); 
 app.use('/api/payments', paymentRoutes); 
-app.use('/api',                shopRoutes);          
+app.use('/api',                shopRoutes);  
+app.use('/api/shipping', shippingRoutes);
+app.use('/api/tax',      taxRoutes);
+app.use('/api/vouchers', voucherRoutes);        
 
 
 // Health check

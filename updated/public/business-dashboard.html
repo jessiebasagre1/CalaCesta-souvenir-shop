@@ -359,7 +359,7 @@
 <aside class="sidebar">
   <div class="sidebar-logo">
     <a href="index.html" class="logo-mark">
-      <div class="logo-icon"><i class="fas fa-store"></i></div>
+      <div class="logo-icon"><i class="fas fa-gift"></i></div>
       <div>
         <div>Cala-Cesta</div>
         <div class="logo-sub">Business</div>
@@ -387,6 +387,15 @@
     <button class="nav-item" onclick="showSection('inventory', this)">
       <i class="fas fa-warehouse"></i><span>Inventory</span>
     </button>
+    <button class="nav-item" onclick="showSection('shipping', this)">
+      <i class="fas fa-truck"></i><span>Shipping</span>
+    </button>
+    <button class="nav-item" onclick="showSection('tax', this)">
+      <i class="fas fa-percent"></i><span>Tax</span>
+    </button>
+    <button class="nav-item" onclick="showSection('vouchers', this)">
+      <i class="fas fa-ticket-alt"></i><span>Vouchers</span>
+    </button>
     <button class="nav-item" onclick="showSection('profile', this)">
       <i class="fas fa-user-edit"></i><span>Profile</span>
     </button>
@@ -401,7 +410,7 @@
 <!-- ═══ MAIN ═══ -->
 <main class="main">
 
-  <div class="topbar">
+<div class="topbar">
     <div class="page-title" id="pageTitle">Overview</div>
     <div class="topbar-actions">
 
@@ -427,6 +436,362 @@
       </button>
     </div>
   </div>
+
+  <div id="shipping-section" class="section">
+  <div class="section-header" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:12px;">
+    <div>
+      <h2 style="font-size:20px;font-weight:800;color:var(--ink);margin:0;">Shipping Management</h2>
+      <p style="font-size:13px;color:var(--ink-muted);margin:4px 0 0;">Configure delivery rules and fees by region.</p>
+    </div>
+    <button class="btn btn-primary" onclick="openShippingModal()">
+      <i class="fas fa-plus"></i> Add Shipping Rule
+    </button>
+  </div>
+ 
+  <!-- Toolbar -->
+  <div class="inv-toolbar">
+  <div class="inv-search">
+    <i class="fas fa-search" style="color:#aaa;font-size:13px;"></i>
+    <input type="text" id="voucherSearch" placeholder="Search voucher code…" oninput="filterVoucherTable()">
+  </div>
+  <div class="inv-filters-row">
+    <select class="inv-filter" id="voucherTypeFilter" onchange="filterVoucherTable()">
+      <option value="">All Types</option>
+      <option value="percentage">Percentage</option>
+      <option value="fixed">Fixed Amount</option>
+      <option value="free_shipping">Free Shipping</option>
+    </select>
+    <select class="inv-filter" id="voucherStatusFilter" onchange="filterVoucherTable()">
+      <option value="">All Status</option>
+      <option value="active">Active</option>
+      <option value="inactive">Inactive</option>
+      <option value="expired">Expired</option>
+    </select>
+  </div>
+</div>
+ 
+  <!-- Table -->
+  <div class="inv-table-wrap">
+    <table class="inv-table" id="shippingTable">
+      <thead>
+        <tr>
+          <th>Region / Location</th>
+          <th>Shipping Fee</th>
+          <th>Free Shipping Min.</th>
+          <th>Est. Delivery</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="shippingTbody">
+        <tr id="shippingEmpty">
+          <td colspan="6" style="text-align:center;padding:48px 0;color:var(--ink-muted);">
+            <i class="fas fa-truck" style="font-size:32px;display:block;margin-bottom:10px;color:#ddd;"></i>
+            No shipping rules yet. Click <strong>Add Shipping Rule</strong> to get started.
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+<!-- ═══ STEP 2B: TAX SECTION ═══════════════════════════════════════════════ -->
+ 
+<div id="tax-section" class="section">
+  <div class="section-header" style="margin-bottom:24px;">
+    <h2 style="font-size:20px;font-weight:800;color:var(--ink);margin:0;">Tax Settings</h2>
+    <p style="font-size:13px;color:var(--ink-muted);margin:4px 0 0;">Configure the platform-wide tax rate applied at checkout.</p>
+  </div>
+ 
+<div class="tax-grid">
+ 
+    <!-- Settings Card -->
+    <div style="background:#fff;border-radius:var(--radius);border:1px solid #eee;padding:28px;">
+      <h3 style="font-size:15px;font-weight:700;margin-bottom:20px;color:var(--ink);">
+        <i class="fas fa-sliders-h" style="margin-right:8px;color:var(--orange);"></i>Tax Configuration
+      </h3>
+ 
+      <div style="margin-bottom:18px;">
+        <label style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#888;display:block;margin-bottom:6px;">
+          Tax Rate (%)
+        </label>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <input type="number" id="taxRateInput" min="0" max="100" step="0.1" value="12"
+            style="width:100px;height:40px;border:1px solid #eee;border-radius:8px;padding:0 12px;font-size:15px;font-weight:700;color:var(--ink);outline:none;"
+            oninput="updateTaxPreview()">
+          <span style="font-size:14px;color:var(--ink-muted);">%</span>
+        </div>
+      </div>
+ 
+      <div style="margin-bottom:18px;">
+        <label style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#888;display:block;margin-bottom:8px;">
+          Tax Mode
+        </label>
+        <label style="display:flex;align-items:center;gap:10px;cursor:pointer;margin-bottom:10px;">
+          <input type="radio" name="taxMode" value="exclusive" id="taxModeExclusive" checked
+            style="accent-color:var(--orange);" onchange="updateTaxPreview()">
+          <div>
+            <div style="font-size:13px;font-weight:600;color:var(--ink);">Added at checkout</div>
+            <div style="font-size:11px;color:var(--ink-muted);">Tax is calculated and added on top of item price</div>
+          </div>
+        </label>
+        <label style="display:flex;align-items:center;gap:10px;cursor:pointer;">
+          <input type="radio" name="taxMode" value="inclusive" id="taxModeInclusive"
+            style="accent-color:var(--orange);" onchange="updateTaxPreview()">
+          <div>
+            <div style="font-size:13px;font-weight:600;color:var(--ink);">Included in price</div>
+            <div style="font-size:11px;color:var(--ink-muted);">Tax is already embedded in the listed price</div>
+          </div>
+        </label>
+      </div>
+ 
+      <div style="margin-bottom:24px;display:flex;align-items:center;justify-content:space-between;">
+        <div>
+          <div style="font-size:13px;font-weight:600;color:var(--ink);">Enable Tax</div>
+          <div style="font-size:11px;color:var(--ink-muted);">Toggle to enable or disable tax collection</div>
+        </div>
+        <label class="tsv-toggle">
+          <input type="checkbox" id="taxEnabledToggle" checked onchange="updateTaxPreview()">
+          <span class="tsv-slider"></span>
+        </label>
+      </div>
+ 
+      <button class="btn btn-primary" onclick="saveTaxSettings()" style="width:100%;" id="saveTaxBtn">
+        <i class="fas fa-save"></i> Save Tax Settings
+      </button>
+    </div>
+ 
+    <!-- Preview Card -->
+    <div style="background:#fff;border-radius:var(--radius);border:1px solid #eee;padding:28px;">
+      <h3 style="font-size:15px;font-weight:700;margin-bottom:20px;color:var(--ink);">
+        <i class="fas fa-calculator" style="margin-right:8px;color:var(--orange);"></i>Live Preview
+      </h3>
+      <p style="font-size:12px;color:var(--ink-muted);margin-bottom:16px;">Based on a ₱1,000 order:</p>
+ 
+      <div id="taxPreview" style="background:var(--sand);border-radius:10px;padding:18px;">
+        <div style="display:flex;justify-content:space-between;margin-bottom:10px;font-size:13px;">
+          <span style="color:var(--ink-muted);">Subtotal</span>
+          <span style="font-weight:600;">₱1,000.00</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:10px;font-size:13px;" id="previewTaxRow">
+          <span style="color:var(--ink-muted);">Tax (<span id="previewRate">12</span>%)</span>
+          <span style="font-weight:600;color:var(--orange);" id="previewTaxAmt">+₱120.00</span>
+        </div>
+        <div style="border-top:1px solid #e0d9cc;margin:12px 0;"></div>
+        <div style="display:flex;justify-content:space-between;font-size:15px;font-weight:800;">
+          <span>Total</span>
+          <span id="previewTotal">₱1,120.00</span>
+        </div>
+        <div id="previewNote" style="font-size:11px;color:var(--ink-muted);margin-top:10px;"></div>
+      </div>
+    </div>
+  </div>
+</div>
+ 
+ 
+<!-- ═══ STEP 2C: VOUCHER SECTION ═══════════════════════════════════════════ -->
+ 
+<div id="vouchers-section" class="section">
+  <div class="section-header" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:12px;">
+    <div>
+      <h2 style="font-size:20px;font-weight:800;color:var(--ink);margin:0;">Voucher Management</h2>
+      <p style="font-size:13px;color:var(--ink-muted);margin:4px 0 0;">Create and manage discount codes for your store.</p>
+    </div>
+    <button class="btn btn-primary" onclick="openVoucherModal()">
+      <i class="fas fa-plus"></i> Create Voucher
+    </button>
+  </div>
+ 
+  <!-- Toolbar -->
+  <div class="inv-toolbar">
+    <div class="inv-search">
+      <i class="fas fa-search" style="color:#aaa;font-size:13px;"></i>
+      <input type="text" id="voucherSearch" placeholder="Search voucher code…" oninput="filterVoucherTable()">
+    </div>
+    <select class="inv-filter" id="voucherTypeFilter" onchange="filterVoucherTable()">
+      <option value="">All Types</option>
+      <option value="percentage">Percentage</option>
+      <option value="fixed">Fixed Amount</option>
+      <option value="free_shipping">Free Shipping</option>
+    </select>
+    <select class="inv-filter" id="voucherStatusFilter" onchange="filterVoucherTable()">
+      <option value="">All Status</option>
+      <option value="active">Active</option>
+      <option value="inactive">Inactive</option>
+      <option value="expired">Expired</option>
+    </select>
+  </div>
+ 
+  <!-- Table -->
+  <div class="inv-table-wrap">
+    <table class="inv-table" id="voucherTable">
+      <thead>
+        <tr>
+          <th>Code</th>
+          <th>Type</th>
+          <th>Discount</th>
+          <th>Min. Spend</th>
+          <th>Expires</th>
+          <th>Usage</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="voucherTbody">
+        <tr id="voucherEmpty">
+          <td colspan="8" style="text-align:center;padding:48px 0;color:var(--ink-muted);">
+            <i class="fas fa-ticket-alt" style="font-size:32px;display:block;margin-bottom:10px;color:#ddd;"></i>
+            No vouchers yet. Click <strong>Create Voucher</strong> to get started.
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+ 
+ 
+<!-- ═══ MODALS ═══════════════════════════════════════════════════════════════ -->
+ 
+<!-- Shipping Modal -->
+<div id="shippingModal" class="tsv-modal-overlay" onclick="closeShippingModal(event)">
+  <div class="tsv-modal" onclick="event.stopPropagation()">
+    <div class="tsv-modal-header">
+      <h3 id="shippingModalTitle">Add Shipping Rule</h3>
+      <button class="tsv-modal-close" onclick="closeShippingModal()"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="tsv-modal-body">
+      <input type="hidden" id="shippingEditId">
+      <div class="tsv-field">
+        <label>Region / Location <span class="tsv-req">*</span></label>
+        <input type="text" id="sRegion" placeholder="e.g. Metro Manila, Luzon, Nationwide">
+      </div>
+      <div class="tsv-field-row">
+        <div class="tsv-field">
+          <label>Shipping Fee (₱) <span class="tsv-req">*</span></label>
+          <input type="number" id="sFee" min="0" step="0.01" placeholder="0.00">
+        </div>
+        <div class="tsv-field">
+          <label>Free Shipping Min. Spend (₱)</label>
+          <input type="number" id="sFreeMin" min="0" step="0.01" placeholder="0 = disabled">
+        </div>
+      </div>
+      <div class="tsv-field">
+        <label>Estimated Delivery Days <span class="tsv-req">*</span></label>
+        <input type="text" id="sEstDays" placeholder="e.g. 3-5 days, 1-2 days">
+      </div>
+      <div class="tsv-field tsv-field-inline">
+        <label>Active</label>
+        <label class="tsv-toggle">
+          <input type="checkbox" id="sIsActive" checked>
+          <span class="tsv-slider"></span>
+        </label>
+      </div>
+    </div>
+    <div class="tsv-modal-footer">
+      <button class="btn btn-ghost" onclick="closeShippingModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveShippingRule()" id="saveShippingBtn">
+        <i class="fas fa-save"></i> Save Rule
+      </button>
+    </div>
+  </div>
+</div>
+ 
+<!-- Voucher Modal -->
+<div id="voucherModal" class="tsv-modal-overlay" onclick="closeVoucherModal(event)">
+  <div class="tsv-modal" onclick="event.stopPropagation()">
+    <div class="tsv-modal-header">
+      <h3 id="voucherModalTitle">Create Voucher</h3>
+      <button class="tsv-modal-close" onclick="closeVoucherModal()"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="tsv-modal-body">
+      <input type="hidden" id="voucherEditId">
+      <div class="tsv-field-row">
+        <div class="tsv-field">
+          <label>Voucher Code <span class="tsv-req">*</span></label>
+          <div style="display:flex;gap:8px;">
+            <input type="text" id="vCode" placeholder="SAVE20" style="text-transform:uppercase;flex:1;">
+            <button class="btn btn-ghost" onclick="generateVoucherCode()" title="Generate random code"
+              style="padding:0 12px;height:40px;flex-shrink:0;"><i class="fas fa-random"></i></button>
+          </div>
+        </div>
+        <div class="tsv-field">
+          <label>Discount Type <span class="tsv-req">*</span></label>
+          <select id="vType" onchange="onVoucherTypeChange()">
+            <option value="percentage">Percentage (%)</option>
+            <option value="fixed">Fixed Amount (₱)</option>
+            <option value="free_shipping">Free Shipping</option>
+          </select>
+        </div>
+      </div>
+      <div class="tsv-field-row" id="vValueRow">
+        <div class="tsv-field">
+          <label id="vValueLabel">Discount Value <span class="tsv-req">*</span></label>
+          <input type="number" id="vValue" min="0" step="0.01" placeholder="0">
+        </div>
+        <div class="tsv-field" id="vMaxDiscountField">
+          <label>Max Discount (₱)</label>
+          <input type="number" id="vMaxDiscount" min="0" step="0.01" placeholder="Leave blank for no cap">
+        </div>
+      </div>
+      <div class="tsv-field-row">
+        <div class="tsv-field">
+          <label>Minimum Spend (₱)</label>
+          <input type="number" id="vMinSpend" min="0" step="0.01" placeholder="0 = no minimum">
+        </div>
+        <div class="tsv-field">
+          <label>Expiration Date</label>
+          <input type="date" id="vExpiresAt">
+        </div>
+      </div>
+      <div class="tsv-field-row">
+        <div class="tsv-field">
+          <label>Usage Limit</label>
+          <input type="number" id="vUsageLimit" min="1" step="1" placeholder="Leave blank = unlimited">
+        </div>
+        <div class="tsv-field tsv-field-inline" style="align-self:flex-end;padding-bottom:4px;">
+          <label>Active</label>
+          <label class="tsv-toggle">
+            <input type="checkbox" id="vIsActive" checked>
+            <span class="tsv-slider"></span>
+          </label>
+        </div>
+      </div>
+    </div>
+    <div class="tsv-modal-footer">
+      <button class="btn btn-ghost" onclick="closeVoucherModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveVoucher()" id="saveVoucherBtn">
+        <i class="fas fa-save"></i> Save Voucher
+      </button>
+    </div>
+  </div>
+</div>
+ 
+<!-- Delete Confirmation Modal (shared) -->
+<div id="deleteConfirmModal" class="tsv-modal-overlay" onclick="closeDeleteConfirm(event)">
+  <div class="tsv-modal" style="max-width:420px;" onclick="event.stopPropagation()">
+    <div class="tsv-modal-header">
+      <h3 id="deleteConfirmTitle">Confirm Delete</h3>
+      <button class="tsv-modal-close" onclick="closeDeleteConfirm()"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="tsv-modal-body">
+      <div style="text-align:center;padding:16px 0;">
+        <div style="width:56px;height:56px;border-radius:50%;background:var(--red-pale);display:flex;align-items:center;justify-content:center;margin:0 auto 14px;">
+          <i class="fas fa-trash-alt" style="color:var(--red);font-size:22px;"></i>
+        </div>
+        <p id="deleteConfirmMsg" style="font-size:14px;color:var(--ink-soft);margin:0;line-height:1.6;"></p>
+      </div>
+    </div>
+    <div class="tsv-modal-footer">
+      <button class="btn btn-ghost" onclick="closeDeleteConfirm()">Cancel</button>
+      <button class="btn" id="deleteConfirmBtn"
+        style="background:var(--red);color:#fff;border-color:var(--red);">
+        <i class="fas fa-trash-alt"></i> Delete
+      </button>
+    </div>
+  </div>
+</div>
+ 
+
+  
 
   <div class="content">
 
@@ -478,9 +843,48 @@
 
     <!-- ── PRODUCTS ──────────────────────────────────────────────── -->
     <div id="products-section" class="section">
-      <div class="product-grid" id="productsList"></div>
+  <div class="inv-toolbar" style="margin-bottom:18px;flex-wrap:wrap;">
+    <div class="inv-search">
+      <i class="fas fa-search" style="color:#bbb;font-size:13px;"></i>
+      <input type="text" id="prodSearch" placeholder="Search products…" oninput="filterProducts()">
     </div>
-
+    <select class="inv-filter" id="prodCategoryFilter" onchange="filterProducts()">
+      <option value="">All Categories</option>
+      <option value="Handcrafts">Handcrafts</option>
+      <option value="Clothing">Clothing</option>
+      <option value="Jewelry">Jewelry</option>
+      <option value="Food">Food</option>
+      <option value="Art">Art</option>
+      <option value="Home Decor">Home Decor</option>
+      <option value="Collectibles">Collectibles</option>
+      <option value="Souvenirs">Souvenirs</option>
+      <option value="Accessories">Accessories</option>
+      <option value="Beauty & Wellness">Beauty &amp; Wellness</option>
+      <option value="Books & Stationery">Books &amp; Stationery</option>
+      <option value="Toys & Games">Toys &amp; Games</option>
+      <option value="Plants & Garden">Plants &amp; Garden</option>
+      <option value="Bags & Shoes">Bags &amp; Shoes</option>
+      <option value="Electronics">Electronics</option>
+      <option value="Ingredients">Ingredients</option>
+      <option value="Other">Other</option>
+    </select>
+    <select class="inv-filter" id="prodStatusFilter" onchange="filterProducts()">
+      <option value="">All Status</option>
+      <option value="active">Active</option>
+      <option value="inactive">Inactive</option>
+      <option value="out-of-stock">Out of Stock</option>
+    </select>
+    <select class="inv-filter" id="prodSortFilter" onchange="filterProducts()">
+      <option value="">Sort: Default</option>
+      <option value="top-sales">⬆ Top Sales</option>
+      <option value="low-sales">⬇ Low Sales</option>
+      <option value="price-high">⬆ Price High</option>
+      <option value="price-low">⬇ Price Low</option>
+    </select>
+  </div>
+  <div id="prodResultCount" style="font-size:12px;color:#aaa;margin-bottom:12px;"></div>
+  <div class="product-grid" id="productsList"></div>
+</div>
     <!-- ── ORDERS ────────────────────────────────────────────────── -->
     <div id="orders-section" class="section">
       <div class="card">
@@ -758,6 +1162,7 @@
         <select class="form-input" id="productCategory">
           <option value="">Select category…</option>
           <option value="Handcrafts">Handcrafts</option>
+          <option value="Cooking Essentials">Cooking Essentials</option>
           <option value="Clothing">Clothing</option>
           <option value="Jewelry">Jewelry</option>
           <option value="Food">Food</option>
@@ -840,6 +1245,7 @@
           <select id="epCategory" class="form-input">
             <option value="">Select category…</option>
             <option value="Handcrafts">Handcrafts</option>
+            <option value="Cooking Essentials">Cooking Essentials</option>
             <option value="Clothing">Clothing</option>
             <option value="Jewelry">Jewelry</option>
             <option value="Food">Food</option>
@@ -947,6 +1353,7 @@
 </div>
 
 <script src="js/auth.js"></script>
+<script src="js/tax.js"></script>
 <script>
   let token = localStorage.getItem('token');
   let currentUser = null;
@@ -1042,7 +1449,7 @@
     if (s.lowStock > 0) rows.push(`
       <div class="alert-row warn">
         <i class="fas fa-exclamation-triangle"></i>
-        <div class="alert-row-text">Products with low stock (&lt;10)</div>
+        <div class="alert-row-text">Products with low stock</div>
         <span class="alert-row-count">${s.lowStock}</span>
       </div>`);
     if (s.pendingOrders > 0) rows.push(`
@@ -1172,33 +1579,62 @@ async function loadCancelledNotifications() {
   }
 
   function renderProducts() {
-    const el = document.getElementById('productsList');
-    if (!products.length) {
-      el.innerHTML = `<div class="empty-state"><i class="fas fa-box-open"></i><p>No products yet. Add your first one!</p></div>`;
-      return;
-    }
-    el.innerHTML = products.map(p => `
-      <div class="product-card" id="pcard-${p._id}">
-        <div class="product-img">
-          ${p.image ? `<img src="${p.image}" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'">` : `<i class="fas fa-image" style="opacity:.3;"></i>`}
-        </div>
-        <div class="product-body">
-          <div style="display:flex;align-items:start;justify-content:space-between;gap:8px;">
-            <div class="product-name">${p.name}</div>
-            <span class="badge ${p.status === 'active' ? 'badge-delivered' : 'badge-cancelled'}" style="flex-shrink:0;">${p.status}</span>
-          </div>
-          <div class="product-desc">${p.description || 'No description'}</div>
-          <div class="product-footer">
-            <div class="product-price">₱${p.price.toFixed(2)}</div>
-            <span class="product-stock ${p.stock < 10 ? 'stock-low' : 'stock-ok'}">${p.stock} in stock</span>
-          </div>
-          <div class="product-actions">
-            <button class="icon-btn" onclick="editProduct('${p._id}')" title="Edit"><i class="fas fa-pencil-alt"></i></button>
-            <button class="icon-btn danger" onclick="deleteProduct('${p._id}')" title="Delete"><i class="fas fa-trash"></i></button>
-          </div>
-        </div>
-      </div>`).join('');
+  filterProducts();
+}
+
+function filterProducts() {
+  const el      = document.getElementById('productsList');
+  const count   = document.getElementById('prodResultCount');
+  const search  = (document.getElementById('prodSearch')?.value || '').toLowerCase();
+  const catF    = document.getElementById('prodCategoryFilter')?.value || '';
+  const statusF = document.getElementById('prodStatusFilter')?.value || '';
+  const sortF   = document.getElementById('prodSortFilter')?.value || '';
+
+  let filtered = products.filter(p => {
+    const matchName   = p.name.toLowerCase().includes(search) || (p.category || '').toLowerCase().includes(search) || (p.description || '').toLowerCase().includes(search);
+    const matchCat    = !catF    || (p.category || '') === catF;
+    const matchStatus = !statusF || p.status === statusF;
+    return matchName && matchCat && matchStatus;
+  });
+
+  if (sortF === 'top-sales')       filtered.sort((a, b) => (b.soldCount || 0) - (a.soldCount || 0));
+  else if (sortF === 'low-sales')  filtered.sort((a, b) => (a.soldCount || 0) - (b.soldCount || 0));
+  else if (sortF === 'price-high') filtered.sort((a, b) => b.price - a.price);
+  else if (sortF === 'price-low')  filtered.sort((a, b) => a.price - b.price);
+
+  if (count) count.textContent = filtered.length !== products.length ? `Showing ${filtered.length} of ${products.length} products` : `${products.length} products`;
+
+  if (!products.length) {
+    el.innerHTML = `<div class="empty-state"><i class="fas fa-box-open"></i><p>No products yet. Add your first one!</p></div>`;
+    return;
   }
+  if (!filtered.length) {
+    el.innerHTML = `<div class="empty-state"><i class="fas fa-search"></i><p>No products match your filters.</p></div>`;
+    return;
+  }
+  el.innerHTML = filtered.map(p => `
+    <div class="product-card" id="pcard-${p._id}">
+      <div class="product-img">
+        ${p.image ? `<img src="${p.image}" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'">` : `<i class="fas fa-image" style="opacity:.3;"></i>`}
+      </div>
+      <div class="product-body">
+        <div style="display:flex;align-items:start;justify-content:space-between;gap:8px;">
+          <div class="product-name">${p.name}</div>
+          <span class="badge ${p.status === 'active' ? 'badge-delivered' : 'badge-cancelled'}" style="flex-shrink:0;">${p.status}</span>
+        </div>
+        <div class="product-desc">${p.description || 'No description'}</div>
+        <div class="product-footer">
+          <div class="product-price">₱${p.price.toFixed(2)}</div>
+          <span class="product-stock ${p.stock < 10 ? 'stock-low' : 'stock-ok'}">${p.stock} in stock</span>
+        </div>
+        ${p.soldCount ? `<div style="font-size:11px;color:#c2612a;margin-top:4px;font-weight:600;">★ ${p.soldCount} sold</div>` : ''}
+        <div class="product-actions">
+          <button class="icon-btn" onclick="editProduct('${p._id}')" title="Edit"><i class="fas fa-pencil-alt"></i></button>
+          <button class="icon-btn danger" onclick="deleteProduct('${p._id}')" title="Delete"><i class="fas fa-trash"></i></button>
+        </div>
+      </div>
+    </div>`).join('');
+}
 
   /* ─── INVENTORY TABLE ─────────────────────────────────── */
   function renderInventoryTable() {
@@ -1231,9 +1667,6 @@ async function loadCancelledNotifications() {
         return `
           <tr id="invrow-${p._id}">
             <td>
-              ${p.image
-                ? `<img src="${p.image}" class="inv-img" onerror="this.style.display='none'">`
-                : `<div class="inv-img-placeholder"><i class="fas fa-image"></i></div>`}
             </td>
             <td>
               <div class="inv-name">${p.name}</div>
@@ -2208,6 +2641,24 @@ async function bVerifyEmailCode() {
     }
   });
 
+})();
+
+(function patchShowSection() {
+  const _original = typeof showSection === 'function' ? showSection : null;
+  const tsvSections = ['shipping', 'tax', 'vouchers'];
+
+  window.showSection = function(name, btn) {
+    if (_original) _original(name, btn);
+
+    const topbar = document.querySelector('.topbar');
+    if (topbar) {
+      topbar.style.display = tsvSections.includes(name) ? 'none' : '';
+    }
+
+    if (name === 'shipping') loadShippingRules();
+    if (name === 'tax')      loadTaxSettings();
+    if (name === 'vouchers') loadVouchers();
+  };
 })();
 
   /* ─── LOGOUT ──────────────────────────────────────────── */
